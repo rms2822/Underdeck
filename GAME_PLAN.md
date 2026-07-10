@@ -395,9 +395,12 @@ Estimates assume ~solo, part-to-full-time. Adjust to your pace.
 
 ## 12. Immediate next steps
 
-1. **Set up the Unity project** (2D URP, iOS+Android build targets, Git + LFS, `.gitignore`).
+1. **Set up the Unity project** (2D URP, iOS+Android build targets, Git + LFS,
+   `.gitignore`). *Partially done: repo layout, asmdefs, and `.gitignore` are in
+   place — create the Unity project itself via Unity Hub (see README).*
 2. **Build `Core/` rules with unit tests** — the deterministic engine described
-   in §2 and §5. This is buildable *today* and independent of art/engine polish.
+   in §2 and §5. **✅ Done** — `Assets/Scripts/Core/` + tests in
+   `Assets/Scripts/Tests/Core/`; run headless with `dotnet test CoreTests`.
 3. **Grey-box run UI** to play it on a device and validate the fun (Phase 0 gate).
 
 > The single highest-leverage first task is the pure-C# rules engine + tests.

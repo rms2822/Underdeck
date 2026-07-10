@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Headless test harness: compiles the exact same source files that live in
+    Assets/Scripts (Core + Tests) so the rules engine can be verified with
+    `dotnet test CoreTests` — no Unity install needed. Inside Unity, the same
+    files run through the Test Runner via their asmdefs instead.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion> <!-- match Unity 2022 LTS -->
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <RootNamespace>Scroundel.Core.Tests</RootNamespace>
+    <AssemblyName>Scroundel.CoreTests</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../Assets/Scripts/Core/**/*.cs" LinkBase="Core" />
+    <Compile Include="../Assets/Scripts/Tests/Core/**/*.cs" LinkBase="Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>
