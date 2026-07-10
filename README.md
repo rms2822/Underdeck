@@ -7,6 +7,15 @@ of the card game **Scoundrel** by Zach Gage & Kurt Bieg.
 plan: mechanic mapping, RPG layer, retention systems, architecture,
 monetization, and roadmap.
 
+## Play it now
+
+`prototype/index.html` is the complete game as a self-contained web build —
+open it in any browser (phone or desktop, no server needed). It runs a
+line-for-line JavaScript port of the C# engine, verified to produce
+bit-identical dungeons and outcomes for the same seeds, and includes the
+Daily Dungeon (everyone gets the same date-seeded deck) and best-score
+tracking. Use it for Phase 0 playtesting while the Unity app is built.
+
 ## What exists right now
 
 The **pure-C# rules engine + full unit-test suite** (Phase 0 of the plan):

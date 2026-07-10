@@ -401,7 +401,10 @@ Estimates assume ~solo, part-to-full-time. Adjust to your pace.
 2. **Build `Core/` rules with unit tests** — the deterministic engine described
    in §2 and §5. **✅ Done** — `Assets/Scripts/Core/` + tests in
    `Assets/Scripts/Tests/Core/`; run headless with `dotnet test CoreTests`.
-3. **Grey-box run UI** to play it on a device and validate the fun (Phase 0 gate).
+3. **Grey-box run UI** to play it on a device and validate the fun (Phase 0
+   gate). **✅ Done as a playable web prototype** (`prototype/index.html`) —
+   full ruleset, combat preview, flee, Daily Dungeon, scoring. Validate the
+   fun here, then port the learnings into the Unity `Presentation/` layer.
 
 > The single highest-leverage first task is the pure-C# rules engine + tests.
 > It's small, it's the heart of the game, and getting it exactly right (especially

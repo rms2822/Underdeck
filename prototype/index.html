@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Scroundel</title>
+</head>
+<body>
+<!-- ART:START -->
+<title>Scroundel</title>
+<style>
+  /* ============ Torchlit Crypt — single committed theme ============ */
+  :root {
+    --ground: #14100e;
+    --stone: #241d19;
+    --stone-hi: #33291f;
+    --stone-lo: #1b1512;
+    --bone: #e8dcc8;
+    --bone-dim: #a3937c;
+    --bone-faint: #6e6152;
+    --ember: #e25822;
+    --ember-deep: #93380f;
+    --verdigris: #7fa88f;
+    --steel: #9baab8;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--ground);
+    color: var(--bone);
+    font-family: var(--serif);
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+  /* torchlight overhead */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: radial-gradient(120% 55% at 50% -8%, rgba(226, 88, 34, 0.13), transparent 60%);
+    animation: torch 7s ease-in-out infinite alternate;
+  }
+  @keyframes torch { from { opacity: 0.75; } to { opacity: 1; } }
+
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  button:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+
+  #app {
+    position: relative; z-index: 1;
+    max-width: 430px; margin: 0 auto;
+    min-height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: 14px 16px calc(12px + env(safe-area-inset-bottom));
+    user-select: none; -webkit-user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* ============ status bar ============ */
+  header { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; align-items: end; }
+  .hp-block { grid-column: 1 / -1; }
+  .label {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.18em;
+    color: var(--bone-faint); text-transform: uppercase;
+  }
+  .hp-row { display: flex; align-items: baseline; gap: 10px; margin-top: 2px; }
+  .hp-num { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; color: var(--bone); white-space: nowrap; }
+  .hp-bar { flex: 1; height: 8px; border-radius: 4px; background: var(--stone-lo); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+  .hp-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--ember-deep), var(--ember)); transition: width .45s ease; }
+  .hp-fill.high { background: linear-gradient(90deg, #5d7a68, var(--verdigris)); }
+  .chip { font-family: var(--mono); font-size: 12px; color: var(--bone-dim); }
+  .chip b { color: var(--steel); font-weight: 600; }
+  .chip .limit { color: var(--ember); }
+  .deck-chip { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ============ the room ============ */
+  #room {
+    flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; align-content: center; padding: 18px 0;
+  }
+  .card {
+    position: relative; aspect-ratio: 3 / 4.1; border-radius: 8px;
+    background: linear-gradient(160deg, var(--stone-hi), var(--stone) 45%, var(--stone-lo));
+    box-shadow: inset 0 1px 0 rgba(232,220,200,.07), 0 8px 20px rgba(0,0,0,.5);
+    border: 1px solid rgba(232,220,200,.1);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; overflow: hidden;
+    transition: transform .12s ease;
+  }
+  .card:active { transform: scale(.97); }
+  .card .seal {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 110px; opacity: .1; pointer-events: none; line-height: 1;
+  }
+  .card .num { font-size: clamp(38px, 11vw, 50px); line-height: 1.05; font-weight: 600; }
+  .card .name { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--bone-dim); text-align: center; padding: 0 6px; }
+  .card .kindtag { font-family: var(--mono); font-size: 9px; letter-spacing: .22em; text-transform: uppercase; margin-top: 4px; }
+  .card.enemy  { border-color: rgba(226,88,34,.32); }
+  .card.enemy  .seal, .card.enemy .kindtag { color: var(--ember); }
+  .card.weapon { border-color: rgba(155,170,184,.32); }
+  .card.weapon .seal, .card.weapon .kindtag { color: var(--steel); }
+  .card.elixir { border-color: rgba(127,168,143,.35); }
+  .card.elixir .seal, .card.elixir .kindtag { color: var(--verdigris); }
+  .card.enter { animation: enter .38s ease backwards; }
+  @keyframes enter { from { opacity: 0; transform: translateY(14px); } }
+
+  /* floating combat text */
+  .float {
+    position: absolute; left: 50%; top: 34%; transform: translateX(-50%);
+    font-family: var(--serif); font-size: 34px; font-weight: 700;
+    pointer-events: none; z-index: 5;
+    animation: floatUp 1s ease-out forwards;
+    text-shadow: 0 2px 10px rgba(0,0,0,.7);
+  }
+  .float.ember { color: var(--ember); }
+  .float.verd  { color: var(--verdigris); }
+  .float.steel { color: var(--steel); }
+  .float.bone  { color: var(--bone-dim); }
+  @keyframes floatUp { to { opacity: 0; transform: translateX(-50%) translateY(-46px); } }
+
+  /* ============ flee bar ============ */
+  footer { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  #flee {
+    width: 100%; padding: 13px; border-radius: 8px;
+    border: 1px solid rgba(232,220,200,.22);
+    letter-spacing: .2em; text-transform: uppercase; font-size: 13px; color: var(--bone);
+  }
+  #flee:disabled { opacity: .4; cursor: default; }
+  #flee-note { font-size: 12px; color: var(--bone-faint); font-style: italic; min-height: 1.2em; text-align: center; }
+
+  /* ============ action sheet ============ */
+  #backdrop {
+    position: fixed; inset: 0; background: rgba(6,4,3,.6); z-index: 8;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  #backdrop.open { opacity: 1; pointer-events: auto; }
+  #sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+    max-width: 430px; margin: 0 auto;
+    background: linear-gradient(180deg, var(--stone-hi), var(--stone));
+    border-radius: 14px 14px 0 0;
+    border: 1px solid rgba(232,220,200,.12); border-bottom: 0;
+    padding: 18px 16px calc(16px + env(safe-area-inset-bottom));
+    transform: translateY(105%); transition: transform .24s ease;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  #sheet.open { transform: translateY(0); }
+  #sheet h3 { font-size: 19px; font-weight: 600; text-wrap: balance; }
+  #sheet h3 span { color: var(--bone-dim); font-size: 14px; font-style: italic; }
+  .act {
+    text-align: left; padding: 12px 14px; border-radius: 8px;
+    background: var(--stone-lo); border: 1px solid rgba(232,220,200,.14);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .act:not(:disabled):active { background: var(--ground); }
+  .act:disabled { opacity: .45; cursor: default; }
+  .act .t { font-size: 15px; }
+  .act .sub { font-family: var(--mono); font-size: 11px; color: var(--bone-dim); }
+  .act.lethal { border-color: rgba(226,88,34,.55); }
+  .act.lethal .sub { color: var(--ember); }
+  .act.cancel { border-color: transparent; background: none; align-items: center; }
+  .act.cancel .t { color: var(--bone-faint); font-style: italic; font-size: 13px; }
+
+  /* ============ overlays ============ */
+  .overlay {
+    position: fixed; inset: 0; z-index: 12; overflow-y: auto;
+    background: radial-gradient(120% 60% at 50% 0%, rgba(226,88,34,.09), transparent 55%), var(--ground);
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 18px; padding: 40px 26px; text-align: center;
+  }
+  .overlay.open { display: flex; }
+  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .3em; color: var(--bone-faint); text-transform: uppercase; }
+  .title { font-size: clamp(38px, 11vw, 52px); letter-spacing: .14em; font-weight: 600; text-wrap: balance; }
+  .rule-flourish { width: 46px; height: 2px; background: var(--ember); border-radius: 1px; }
+  .digest { max-width: 34ch; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+  .digest p { font-size: 14.5px; line-height: 1.5; color: var(--bone-dim); }
+  .digest .s-enemy { color: var(--ember); }
+  .digest .s-weapon { color: var(--steel); }
+  .digest .s-elixir { color: var(--verdigris); }
+  .btn-col { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 6px; }
+  .cta {
+    padding: 14px; border-radius: 8px; letter-spacing: .18em; text-transform: uppercase; font-size: 13px;
+    background: linear-gradient(180deg, var(--ember), var(--ember-deep)); color: #1a0d06; font-weight: 700;
+  }
+  .cta.ghost { background: none; border: 1px solid rgba(232,220,200,.25); color: var(--bone); font-weight: 400; }
+  .verdict { font-size: clamp(40px, 12vw, 56px); letter-spacing: .12em; font-weight: 600; }
+  .verdict.won { color: var(--verdigris); }
+  .verdict.lost { color: var(--ember); }
+  .epitaph { font-style: italic; color: var(--bone-dim); max-width: 30ch; text-wrap: balance; line-height: 1.45; }
+  .score-line { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; color: var(--bone); }
+  .best-line { font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
+    .card.enter { animation: none; }
+    .float { animation-duration: .01s; }
+    #sheet, #backdrop, .hp-fill { transition: none; }
+  }
+</style>
+
+<div id="app" aria-live="polite">
+  <header>
+    <div class="hp-block">
+      <span class="label">Health</span>
+      <div class="hp-row">
+        <div class="hp-bar"><div class="hp-fill" id="hp-fill" style="width:100%"></div></div>
+        <span class="hp-num" id="hp-num">20 / 20</span>
+      </div>
+    </div>
+    <div class="chip" id="weapon-chip">Unarmed</div>
+    <div class="chip deck-chip"><span class="label">Below</span> <span id="deck-count">40</span></div>
+  </header>
+
+  <main id="room"></main>
+
+  <footer>
+    <button id="flee">Flee the Room</button>
+    <p id="flee-note"></p>
+  </footer>
+</div>
+
+<div id="backdrop"></div>
+<div id="sheet" role="dialog" aria-modal="true" aria-label="Choose an action"></div>
+
+<div class="overlay open" id="start">
+  <p class="eyebrow">A dungeon of forty-four cards</p>
+  <h1 class="title">SCROUNDEL</h1>
+  <div class="rule-flourish"></div>
+  <div class="digest">
+    <p><span class="s-enemy">Monsters (♣ ♠)</span> strike for their value. Fight bare-handed, or let your weapon take the blow.</p>
+    <p><span class="s-weapon">Weapons (♦)</span> dull with use — after a kill, a blade only cuts monsters of equal or lesser value.</p>
+    <p><span class="s-elixir">Elixirs (♥)</span> heal, but only the first you drink in each room.</p>
+    <p>Flee a room before acting in it — never twice in a row. Outlast all 44 cards and your health is your score.</p>
+  </div>
+  <div class="btn-col">
+    <button class="cta" id="btn-new">Begin the Descent</button>
+    <button class="cta ghost" id="btn-daily">Daily Dungeon</button>
+  </div>
+  <p class="best-line" id="start-best"></p>
+</div>
+
+<div class="overlay" id="end">
+  <p class="eyebrow" id="end-eyebrow"></p>
+  <h1 class="verdict" id="end-verdict"></h1>
+  <div class="rule-flourish"></div>
+  <p class="epitaph" id="end-epitaph"></p>
+  <p class="score-line" id="end-score"></p>
+  <p class="best-line" id="end-best"></p>
+  <div class="btn-col">
+    <button class="cta" id="btn-again">Descend Again</button>
+    <button class="cta ghost" id="btn-retry">Retry This Dungeon</button>
+    <button class="cta ghost" id="btn-daily2">Daily Dungeon</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================================================================
+   ENGINE — line-for-line port of Assets/Scripts/Core (C#).
+   Keep in lockstep with Rules.cs; the seed-7 deck order is verified
+   against the C# engine in CI-style tests.
+   ================================================================ */
+const MASK = (1n << 64n) - 1n;
+function splitmix64(seed) {
+  let s = BigInt(seed) & MASK;
+  return function () {
+    s = (s + 0x9E3779B97F4A7C15n) & MASK;
+    let z = s;
+    z = ((z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n) & MASK;
+    z = ((z ^ (z >> 27n)) * 0x94D049BB133111EBn) & MASK;
+    return (z ^ (z >> 31n)) & MASK;
+  };
+}
+function createDungeon() {
+  const d = [];
+  for (let r = 2; r <= 14; r++) { d.push({ s: "♣", r }); d.push({ s: "♠", r }); }
+  for (let r = 2; r <= 10; r++) { d.push({ s: "♦", r }); d.push({ s: "♥", r }); }
+  return d;
+}
+function shuffle(a, seed) {
+  const next = splitmix64(seed);
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Number(next() % BigInt(i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+}
+const kindOf = (c) => (c.s === "♦" ? "weapon" : c.s === "♥" ? "elixir" : "enemy");
+const RANKS = { 11: "J", 12: "Q", 13: "K", 14: "A" };
+const fmt = (c) => (RANKS[c.r] || c.r) + c.s;
+
+function newGame(seed) {
+  const dungeon = createDungeon();
+  shuffle(dungeon, seed);
+  const G = {
+    status: "playing", hp: 20, maxHp: 20,
+    weapon: null, weaponLimit: null,
+    dungeon, room: [], discard: [],
+    elixirDrunk: false, fledLast: false, resolvedThisRoom: 0, lastResolved: null,
+  };
+  deal(G, false);
+  return G;
+}
+function deal(G, fled) {
+  while (G.room.length < 4 && G.dungeon.length > 0) G.room.push(G.dungeon.shift());
+  G.elixirDrunk = false;
+  G.fledLast = fled;
+  G.resolvedThisRoom = 0;
+  if (G.room.length === 0 && G.status === "playing") G.status = "won";
+}
+function canFlee(G) {
+  return G.status === "playing" && !G.fledLast && G.resolvedThisRoom === 0 && G.room.length > 0;
+}
+function canUseWeapon(G, c) {
+  return kindOf(c) === "enemy" && !!G.weapon && (G.weaponLimit === null || c.r <= G.weaponLimit);
+}
+function previewDamage(G, c, useWeapon) {
+  return useWeapon ? Math.max(0, c.r - G.weapon.r) : c.r;
+}
+function takeFromRoom(G, c) {
+  if (G.status !== "playing") throw new Error("run is over");
+  const i = G.room.findIndex((x) => x.s === c.s && x.r === c.r);
+  if (i < 0) throw new Error(fmt(c) + " is not in the room");
+  G.room.splice(i, 1);
+}
+function resolveCard(G, c) {
+  G.discard.push(c);
+  G.lastResolved = c;
+  G.resolvedThisRoom++;
+  if (G.hp <= 0) { G.status = "lost"; return; }
+  if (G.room.length === 0 && G.dungeon.length === 0) { G.status = "won"; return; }
+  if (G.room.length === 1 && G.dungeon.length > 0) deal(G, false); // resolve 3, carry 1
+}
+function fight(G, c, useWeapon) {
+  if (kindOf(c) !== "enemy") throw new Error("not an enemy");
+  if (useWeapon && !canUseWeapon(G, c)) throw new Error("weapon cannot strike " + fmt(c));
+  takeFromRoom(G, c);
+  const dmg = previewDamage(G, c, useWeapon);
+  if (useWeapon) G.weaponLimit = c.r; // degradation
+  G.hp = Math.max(0, G.hp - dmg);
+  resolveCard(G, c);
+  return dmg;
+}
+function equip(G, c) {
+  if (kindOf(c) !== "weapon") throw new Error("not a weapon");
+  takeFromRoom(G, c);
+  G.weapon = c;
+  G.weaponLimit = null;
+  resolveCard(G, c);
+}
+function drink(G, c) {
+  if (kindOf(c) !== "elixir") throw new Error("not an elixir");
+  takeFromRoom(G, c);
+  let healed = 0;
+  if (!G.elixirDrunk) {
+    healed = Math.min(G.maxHp - G.hp, c.r);
+    G.hp += healed;
+    G.elixirDrunk = true;
+  }
+  resolveCard(G, c);
+  return healed;
+}
+function flee(G) {
+  if (!canFlee(G)) throw new Error("cannot flee");
+  G.dungeon.push(...G.room);
+  G.room.length = 0;
+  deal(G, true);
+}
+function score(G) {
+  if (G.status === "won") {
+    let s = G.hp;
+    if (G.hp === G.maxHp && G.lastResolved && kindOf(G.lastResolved) === "elixir")
+      s += G.lastResolved.r; // wasted-final-potion bonus
+    return s;
+  }
+  if (G.status === "lost") {
+    let menace = 0;
+    for (const c of G.dungeon) if (kindOf(c) === "enemy") menace += c.r;
+    for (const c of G.room) if (kindOf(c) === "enemy") menace += c.r;
+    return -menace;
+  }
+  throw new Error("run in progress");
+}
+
+/* ================================================================
+   FLAVOR — names per rank band (GAME_PLAN §3.2)
+   ================================================================ */
+const ENEMY_NAMES = {
+  2: "Rat", 3: "Cave Bat", 4: "Slime", 5: "Goblin", 6: "Skeleton", 7: "Bandit",
+  8: "Dire Wolf", 9: "Cultist", 10: "Ogre", 11: "Wraith", 12: "Dark Knight",
+  13: "Stone Golem", 14: "Dragon Lord",
+};
+const WEAPON_NAMES = {
+  2: "Rusty Knife", 3: "Dagger", 4: "Cudgel", 5: "Shortsword", 6: "Mace",
+  7: "Longsword", 8: "War Axe", 9: "Greatsword", 10: "Dragonblade",
+};
+const elixirName = (r) => (r <= 4 ? "Weak Elixir" : r <= 7 ? "Elixir" : "Greater Elixir");
+const cardName = (c) =>
+  kindOf(c) === "enemy" ? ENEMY_NAMES[c.r] : kindOf(c) === "weapon" ? WEAPON_NAMES[c.r] : elixirName(c.r);
+const KIND_TAG = { enemy: "monster", weapon: "weapon", elixir: "elixir" };
+
+/* ================================================================
+   UI
+   ================================================================ */
+let g = null;
+let seedStr = null;
+let prevIds = new Set();
+const $ = (q) => document.querySelector(q);
+const cid = (c) => c.r + c.s;
+
+function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+
+function bestScore() { try { return JSON.parse(localStorage.getItem("scroundel.best")); } catch (e) { return null; } }
+function saveBest(s) {
+  try {
+    const b = bestScore();
+    if (b === null || s > b) { localStorage.setItem("scroundel.best", String(s)); return true; }
+  } catch (e) {}
+  return false;
+}
+
+function startRun(seed) {
+  seedStr = String(seed);
+  g = newGame(BigInt(seedStr));
+  prevIds = new Set();
+  $("#start").classList.remove("open");
+  $("#end").classList.remove("open");
+  closeSheet();
+  render();
+}
+function randomSeed() { return String(Math.floor(Math.random() * 9007199254740991)); }
+function dailySeed() {
+  const d = new Date();
+  return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+}
+function dailyLabel() {
+  return new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function render() {
+  // status bar
+  $("#hp-num").textContent = g.hp + " / " + g.maxHp;
+  const fill = $("#hp-fill");
+  fill.style.width = (100 * g.hp / g.maxHp) + "%";
+  fill.classList.toggle("high", g.hp > 7);
+  const wc = $("#weapon-chip");
+  if (g.weapon) {
+    wc.innerHTML = "<b>" + cardName(g.weapon) + " " + g.weapon.r + "</b>" +
+      (g.weaponLimit !== null ? ' <span class="limit">· strikes ≤ ' + g.weaponLimit + "</span>" : " · fresh edge");
+  } else {
+    wc.textContent = "Unarmed";
+  }
+  $("#deck-count").textContent = g.dungeon.length;
+
+  // room
+  const room = $("#room");
+  room.innerHTML = "";
+  const newIds = new Set(g.room.map(cid));
+  g.room.forEach((c, i) => {
+    const k = kindOf(c);
+    const b = document.createElement("button");
+    b.className = "card " + k + (prevIds.has(cid(c)) ? "" : " enter");
+    b.style.animationDelay = (i * 0.05) + "s";
+    b.dataset.cid = cid(c);
+    b.setAttribute("aria-label", cardName(c) + ", " + KIND_TAG[k] + ", value " + c.r);
+    b.innerHTML =
+      '<span class="seal" aria-hidden="true">' + c.s + "</span>" +
+      '<span class="num">' + c.r + "</span>" +
+      '<span class="name">' + cardName(c) + "</span>" +
+      '<span class="kindtag">' + c.s + " " + KIND_TAG[k] + "</span>";
+    b.addEventListener("click", () => openSheet(c));
+    room.appendChild(b);
+  });
+  prevIds = newIds;
+
+  // flee
+  const fleeBtn = $("#flee");
+  const note = $("#flee-note");
+  fleeBtn.disabled = !canFlee(g);
+  note.textContent =
+    g.status !== "playing" ? "" :
+    g.fledLast ? "You fled the last room — stand and fight this one." :
+    g.resolvedThisRoom > 0 ? "You have already acted — no escape now." :
+    "Send all four cards to the bottom of the dungeon.";
+}
+
+function floatText(text, tone) {
+  const el = document.createElement("span");
+  el.className = "float " + tone;
+  el.textContent = text;
+  $("#room").appendChild(el);
+  el.addEventListener("animationend", () => el.remove());
+}
+
+/* ---------- action sheet ---------- */
+function sheetOption({ title, sub, lethal, disabled, onPick }) {
+  const b = document.createElement("button");
+  b.className = "act" + (lethal ? " lethal" : "");
+  b.disabled = !!disabled;
+  b.innerHTML = '<span class="t">' + title + '</span><span class="sub">' + sub + "</span>";
+  if (onPick) b.addEventListener("click", onPick);
+  return b;
+}
+function openSheet(c) {
+  if (g.status !== "playing") return;
+  const sheet = $("#sheet");
+  sheet.innerHTML = "";
+  const k = kindOf(c);
+  const h = document.createElement("h3");
+
+  if (k === "enemy") {
+    h.innerHTML = cardName(c) + " <span>— strength " + c.r + "</span>";
+    sheet.appendChild(h);
+    if (g.weapon) {
+      if (canUseWeapon(g, c)) {
+        const dmg = previewDamage(g, c, true);
+        sheet.appendChild(sheetOption({
+          title: "Strike with the " + cardName(g.weapon) + " (" + g.weapon.r + ")",
+          sub: (dmg > 0 ? "take " + dmg + " damage" : "take no damage") +
+               " · blade dulls to ≤ " + c.r +
+               (dmg >= g.hp ? " — you will die" : ""),
+          lethal: dmg >= g.hp,
+          onPick: () => act(() => {
+            const taken = fight(g, c, true);
+            return taken > 0 ? { label: "−" + taken, tone: "ember", buzz: 60 }
+                             : { label: "blocked", tone: "steel" };
+          }),
+        }));
+      } else {
+        sheet.appendChild(sheetOption({
+          title: cardName(g.weapon) + " is too dull",
+          sub: "it now only strikes monsters of value ≤ " + g.weaponLimit,
+          disabled: true,
+        }));
+      }
+    }
+    const bare = previewDamage(g, c, false);
+    sheet.appendChild(sheetOption({
+      title: "Fight bare-handed",
+      sub: "take " + bare + " damage" + (bare >= g.hp ? " — you will die" : ""),
+      lethal: bare >= g.hp,
+      onPick: () => act(() => {
+        const taken = fight(g, c, false);
+        return { label: "−" + taken, tone: "ember", buzz: 60 };
+      }),
+    }));
+  } else if (k === "weapon") {
+    h.innerHTML = cardName(c) + " <span>— power " + c.r + "</span>";
+    sheet.appendChild(h);
+    sheet.appendChild(sheetOption({
+      title: "Take up the " + cardName(c),
+      sub: g.weapon ? "replaces the " + cardName(g.weapon) + " (" + g.weapon.r + ") · fresh edge"
+                    : "your hands are empty no longer",
+      onPick: () => act(() => { equip(g, c); return { label: "armed", tone: "steel" }; }),
+    }));
+  } else {
+    h.innerHTML = cardName(c) + " <span>— restores " + c.r + "</span>";
+    sheet.appendChild(h);
+    const healed = g.elixirDrunk ? 0 : Math.min(g.maxHp - g.hp, c.r);
+    sheet.appendChild(sheetOption({
+      title: "Drink the " + cardName(c),
+      sub: g.elixirDrunk ? "no effect — you already drank in this room"
+         : healed === 0 ? "no effect — your health is already full"
+         : "restore " + healed + " health",
+      onPick: () => act(() => {
+        const n = drink(g, c);
+        return n > 0 ? { label: "+" + n, tone: "verd", buzz: 15 }
+                     : { label: "wasted", tone: "verd" };
+      }),
+    }));
+  }
+
+  const cancel = document.createElement("button");
+  cancel.className = "act cancel";
+  cancel.innerHTML = '<span class="t">Leave it</span>';
+  cancel.addEventListener("click", closeSheet);
+  sheet.appendChild(cancel);
+
+  $("#backdrop").classList.add("open");
+  sheet.classList.add("open");
+}
+function closeSheet() {
+  $("#sheet").classList.remove("open");
+  $("#backdrop").classList.remove("open");
+}
+$("#backdrop").addEventListener("click", closeSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+
+/* act() runs an engine action; it returns {label, tone, buzz?} for the combat float */
+function act(run) {
+  let fx;
+  try { fx = run(); } catch (err) { closeSheet(); return; }
+  closeSheet();
+  floatText(fx.label, fx.tone);
+  if (fx.buzz) buzz(fx.buzz);
+  render();
+  if (g.status !== "playing") setTimeout(showEnd, 750);
+}
+
+$("#flee").addEventListener("click", () => {
+  if (!canFlee(g)) return;
+  flee(g);
+  floatText("fled", "bone");
+  render();
+});
+
+/* ---------- overlays ---------- */
+function showEnd() {
+  const won = g.status === "won";
+  const s = score(g);
+  const isBest = saveBest(s);
+  $("#end-eyebrow").textContent = won ? "the dungeon lies empty" : "the dungeon keeps you";
+  const v = $("#end-verdict");
+  v.textContent = won ? "ESCAPED" : "SLAIN";
+  v.className = "verdict " + (won ? "won" : "lost");
+  $("#end-epitaph").textContent = won
+    ? "You climb into daylight with " + g.hp + " health to spare."
+    : "The " + (g.lastResolved ? cardName(g.lastResolved) : "dungeon") + " ends your descent. " +
+      (-s) + " menace still lurks below.";
+  $("#end-score").textContent = "score " + s;
+  const b = bestScore();
+  $("#end-best").textContent = (isBest ? "new best score" : b !== null ? "best " + b : "");
+  $("#end").classList.add("open");
+}
+$("#btn-new").addEventListener("click", () => startRun(randomSeed()));
+$("#btn-again").addEventListener("click", () => startRun(randomSeed()));
+$("#btn-retry").addEventListener("click", () => startRun(seedStr));
+$("#btn-daily").addEventListener("click", () => startRun(dailySeed()));
+$("#btn-daily2").addEventListener("click", () => startRun(dailySeed()));
+$("#btn-daily").textContent = "Daily Dungeon · " + dailyLabel();
+(function initStart() {
+  const b = bestScore();
+  if (b !== null) $("#start-best").textContent = "best score " + b;
+})();
+
+/* ================================================================
+   Test hooks (used by the Playwright harness; harmless in play)
+   ================================================================ */
+window.__scroundel = {
+  deckForSeed: (s) => { const d = createDungeon(); shuffle(d, BigInt(s)); return d.map(fmt).join(","); },
+  start: (s) => startRun(s),
+  state: () => g,
+  autoplay: (s) => {
+    const G = newGame(BigInt(s));
+    let steps = 0;
+    while (G.status === "playing" && steps++ < 100) {
+      const c = G.room[0];
+      if (kindOf(c) === "weapon") equip(G, c);
+      else if (kindOf(c) === "elixir") drink(G, c);
+      else fight(G, c, canUseWeapon(G, c));
+      const total = G.dungeon.length + G.room.length + G.discard.length;
+      if (total !== 44) throw new Error("card conservation broken: " + total);
+      if (G.hp < 0 || G.hp > G.maxHp) throw new Error("hp out of range: " + G.hp);
+    }
+    return { status: G.status, score: score(G), steps, discard: G.discard.map(fmt).join(",") };
+  },
+};
+</script>
+<!-- ART:END -->
+</body>
+</html>
