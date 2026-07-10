@@ -87,7 +87,7 @@ Each class = a small twist on the base rules, giving replay variety.
 |---|---|---|
 | **Knight** | 20 | Baseline / tutorial class. Balanced. |
 | **Rogue** | 16 | May flee even after fleeing last encounter (once per floor). |
-| **Berserker** | 24 | +1 barehanded damage dealt is ignored... i.e. takes −2 when barehanded below 50% HP (risk/reward). |
+| **Berserker** | 24 | Ignores 2 damage when fighting barehanded — weapons feel optional (risk/reward). |
 | **Cleric** | 18 | First elixir each encounter heals +2 (rounding tension differently). |
 
 Keep twists *small and math-legible*. Unlock classes via meta-progression.
@@ -120,6 +120,73 @@ Runs are short and often lost — give permanence between runs.
 > Meta-progression should add *content and goals*, not raw power that trivializes
 > the core math. Prefer sideways unlocks (new classes/challenges) over vertical
 > power creep.
+
+### 3.5 Retention & replayability upgrade pack
+
+Scoundrel's fixed 44-card deck is its elegance **and** its replayability
+ceiling — every run has the same texture. The systems below attack that
+directly. Each is tagged with build cost (**S**mall / **M**edium) and the loop
+it feeds: *in-run* systems make every run feel different (replayability);
+*between-run* systems give a reason to come back tomorrow (retention).
+
+**In-run (replayability)**
+
+1. **Descend or Retreat — S, highest value.** After clearing a floor, choose:
+   *bank* your gold and end the run safely, or *descend* — deeper floors
+   multiply rewards (×1.5 / ×2 / ×3...) but dying forfeits most unbanked gold.
+   Converts every win into a fresh push-your-luck decision, creates natural
+   "one more floor" tension, and gives the rewarded-ad second wind its
+   highest-stakes moment. Cheapest system on this list; build it first.
+2. **Floor themes (deck mutators) — M.** Each descent offers **two doors**
+   with visible modifiers — *Crypt:* +2 high enemies, −2 elixirs; *Armory:*
+   +2 weapons, all weapons −1 power; *Fungal Garden:* +2 elixirs, elixirs
+   heal −1. Same core math, different textures — and because modifiers are
+   telegraphed at the door, it's strategy, not a slot machine.
+3. **Relic drafts — M.** Draft 1-of-3 relics after each floor, **hard cap 3
+   active**. Every relic is one sentence and math-legible: *Whetstone* (once
+   per floor, reset weapon degradation), *Lucky Coin* (first flee each floor
+   is always allowed), *Scrying Orb* (see the next card of the carried-over
+   room), *Iron Flask* (second elixir per encounter heals half). Relics are
+   the "build variety" engine the fixed deck otherwise lacks.
+4. **Special encounter cards — M.** Inject 2–3 uncommon cards per floor:
+   *Merchant* (spend run-gold on healing or weapon repair), *Shrine*
+   (sacrifice HP to bless your weapon), *Cursed Chest* (big elixir or a mimic
+   elite — reveal to find out). Keep injections rare so base math dominates.
+5. **Elite affixes — S.** One-word modifiers on a few deep-run enemies, max
+   3 affixes at launch: *Armored* (your weapon counts as 1 less), *Thorned*
+   (always deals at least 1 damage), *Hexed* (defeating it locks healing for
+   the rest of the encounter). Each must render exactly in the combat preview.
+
+**Between-run (retention)**
+
+6. **Quest board — S.** 3 dailies + 1 weekly contract ("defeat 5 enemies
+   barehanded", "clear a floor without fleeing", "finish with an unbroken
+   weapon"). Quests deliberately push *off-meta* play — they teach depth while
+   paying out gold/cosmetic currency.
+7. **Daily Challenge streaks — S.** Same seeded floor for everyone + a streak
+   calendar; a streak-saver token is earnable in play or via rewarded ad
+   (clean monetization synergy). Friends leaderboard first, global later.
+8. **Class mastery — M.** Per-class XP levels with cosmetic unlocks and
+   challenge badges — never raw power. "Win with every class" is the long-arc
+   goal that makes class unlocks matter.
+9. **Bestiary / codex — S.** Defeat-count collection: art + one line of lore
+   per creature, completion % surfaced. Cheap content that makes the RPG
+   reskin itself do retention work.
+10. **Weekly Gauntlet — M.** Fixed-seed 3-floor run, preset class + relics,
+    one attempt per day, leaderboard resets weekly. The competitive skeleton
+    for the endgame crowd, and a reason lapsed players get pinged back.
+11. **Ascension ladder — S.** Concrete tiers unlocked by winning, one line
+    each: A1 start at 18 HP · A2 elixirs heal −2 · A3 fleeing shuffles the
+    room instead of bottoming it · A4 face-card enemies +1 value. Vertical
+    *difficulty*, never vertical power.
+
+> **Three gates for every new mechanic:** (1) explainable in one sentence,
+> (2) its exact numeric effect shows in the combat preview, (3) implemented as
+> a data-driven modifier layered over the pure-C# engine — never a special
+> case inside `Rules.cs`. If a mechanic fails a gate, cut it.
+
+**Suggested order:** Descend-or-Retreat → Quest board + streaks + bestiary
+(the cheap retention trio) → Relics → Floor themes → Gauntlet → Elites/Ascension.
 
 ---
 
@@ -254,6 +321,8 @@ Estimates assume ~solo, part-to-full-time. Adjust to your pace.
 ### Phase 2 — Depth & retention (≈4–6 weeks)
 - Meta-progression: gold, unlocks, 2–3 more classes.
 - Daily Challenge (seeded) + local/simple leaderboard.
+- **Retention pack (small items from §3.5):** Descend-or-Retreat, quest board,
+  daily streaks, bestiary.
 - Enemy/weapon/elixir art & flavor bands. Juice pass.
 
 ### Phase 3 — Monetization & services (≈2–4 weeks)
@@ -269,6 +338,8 @@ Estimates assume ~solo, part-to-full-time. Adjust to your pace.
 ### Phase 5 — Launch & live-ops (ongoing)
 - Global release. Monitor crashes, reviews, funnels.
 - Cadence of light content: new classes, weekly challenge themes, cosmetics.
+- **Replayability drops (§3.5, medium items):** relic packs, floor themes,
+  elite affixes, Weekly Gauntlet seasons — one system per update, playtested.
 
 ---
 
@@ -297,6 +368,14 @@ Estimates assume ~solo, part-to-full-time. Adjust to your pace.
 - **Deterministic replay** via seeds for bug repro and balance regression tests.
 - Device testing across a few low/mid/high phones (perf, aspect ratios, notches).
 - Balance telemetry: win rate by class, avg depth, death causes, ad-offer accept rate.
+
+**Retention KPIs (what "working" looks like)**
+- **D1 ≥ 35%, D7 ≥ 12%, D30 ≥ 5%** — mid-core mobile roguelike benchmarks.
+- Median session ≥ 2 runs; median run 5–10 min (protect this — it's the hook).
+- Daily Challenge participation ≥ 25% of DAU; watch streak-length distribution.
+- **Descend take-rate 40–60%** — if players always (or never) descend, the
+  multipliers are mistuned; the choice must stay genuinely hard.
+- Second-wind ad accept ≥ 30% without review-score damage.
 
 ---
 
