@@ -22,6 +22,7 @@
     --ember-deep: #93380f;
     --verdigris: #7fa88f;
     --steel: #9baab8;
+    --gold: #d9a441;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     --mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   }
@@ -72,6 +73,8 @@
   .chip b { color: var(--steel); font-weight: 600; }
   .chip .limit { color: var(--ember); }
   .deck-chip { text-align: right; font-variant-numeric: tabular-nums; }
+  .chip.gold #gold-count, .gold-text { color: var(--gold); }
+  .digest .s-gold { color: var(--gold); }
 
   /* ============ the room ============ */
   #room {
@@ -209,6 +212,8 @@
     </div>
     <div class="chip" id="weapon-chip">Unarmed</div>
     <div class="chip deck-chip"><span class="label">Below</span> <span id="deck-count">40</span></div>
+    <div class="chip" id="floor-chip">Floor 1</div>
+    <div class="chip deck-chip gold" id="gold-chip"><span class="label">Hoard</span> <span id="gold-count">0</span></div>
   </header>
 
   <main id="room"></main>
@@ -230,13 +235,28 @@
     <p><span class="s-enemy">Monsters (♣ ♠)</span> strike for their value. Fight bare-handed, or let your weapon take the blow.</p>
     <p><span class="s-weapon">Weapons (♦)</span> dull with use — after a kill, a blade only cuts monsters of equal or lesser value.</p>
     <p><span class="s-elixir">Elixirs (♥)</span> heal, but only the first you drink in each room.</p>
-    <p>Flee a room before acting in it — never twice in a row. Outlast all 44 cards and your health is your score.</p>
+    <p>Flee a room before acting in it — never twice in a row.</p>
+    <p><span class="s-gold">Clear all 44 cards</span> and choose: retreat with your gold, or descend — deeper floors pay more, but dying forfeits most of your unbanked hoard.</p>
   </div>
   <div class="btn-col">
     <button class="cta" id="btn-new">Begin the Descent</button>
     <button class="cta ghost" id="btn-daily">Daily Dungeon</button>
   </div>
   <p class="best-line" id="start-best"></p>
+</div>
+
+<div class="overlay" id="floorclear">
+  <p class="eyebrow" id="fc-eyebrow"></p>
+  <h1 class="verdict won">FLOOR CLEARED</h1>
+  <div class="rule-flourish"></div>
+  <p class="epitaph" id="fc-health"></p>
+  <p class="score-line gold-text" id="fc-earned"></p>
+  <p class="score-line" id="fc-unbanked"></p>
+  <p class="best-line">die below and you keep a fifth of it</p>
+  <div class="btn-col">
+    <button class="cta" id="btn-descend">Descend</button>
+    <button class="cta ghost" id="btn-retreat">Retreat</button>
+  </div>
 </div>
 
 <div class="overlay" id="end">
@@ -399,9 +419,26 @@ const cardName = (c) =>
 const KIND_TAG = { enemy: "monster", weapon: "weapon", elixir: "elixir" };
 
 /* ================================================================
+   RUN LAYER — Descend or Retreat (GAME_PLAN §3.5 #1).
+   A run is a ladder of floors; each floor is one untouched engine
+   game. Gold earned = floor score × the floor's multiplier; dying
+   forfeits 80% of the unbanked hoard, retreating banks all of it.
+   ================================================================ */
+function multFor(floor) { return floor === 1 ? 1 : floor === 2 ? 1.5 : floor === 3 ? 2 : floor - 1; }
+function floorSeed(base, floor) {
+  if (floor === 1) return BigInt(base); // floor 1 stays parity-identical to the C# engine
+  const next = splitmix64(BigInt(base));
+  let v = 0n;
+  for (let i = 1; i < floor; i++) v = next();
+  return v;
+}
+const SALVAGE = 0.2; // fraction of the unbanked hoard kept on death
+
+/* ================================================================
    UI
    ================================================================ */
 let g = null;
+let run = null; // { baseSeed, floor, unbanked, lastEarned }
 let seedStr = null;
 let prevIds = new Set();
 const $ = (q) => document.querySelector(q);
@@ -409,22 +446,43 @@ const cid = (c) => c.r + c.s;
 
 function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
-function bestScore() { try { return JSON.parse(localStorage.getItem("scroundel.best")); } catch (e) { return null; } }
-function saveBest(s) {
+function bests() {
   try {
-    const b = bestScore();
-    if (b === null || s > b) { localStorage.setItem("scroundel.best", String(s)); return true; }
+    return {
+      hoard: Number(localStorage.getItem("scroundel.bestHoard")) || null,
+      floor: Number(localStorage.getItem("scroundel.bestFloor")) || null,
+    };
+  } catch (e) { return { hoard: null, floor: null }; }
+}
+function saveBests(hoard, floor) {
+  let newHoard = false;
+  try {
+    const b = bests();
+    if (b.hoard === null || hoard > b.hoard) { localStorage.setItem("scroundel.bestHoard", String(hoard)); newHoard = true; }
+    if (b.floor === null || floor > b.floor) localStorage.setItem("scroundel.bestFloor", String(floor));
   } catch (e) {}
-  return false;
+  return newHoard;
 }
 
 function startRun(seed) {
   seedStr = String(seed);
-  g = newGame(BigInt(seedStr));
+  run = { baseSeed: seedStr, floor: 1, unbanked: 0, lastEarned: 0 };
+  g = newGame(floorSeed(seedStr, 1));
   prevIds = new Set();
   $("#start").classList.remove("open");
   $("#end").classList.remove("open");
+  $("#floorclear").classList.remove("open");
   closeSheet();
+  render();
+}
+
+function descend() {
+  run.floor++;
+  const hp = g.hp, weapon = g.weapon, limit = g.weaponLimit;
+  g = newGame(floorSeed(run.baseSeed, run.floor));
+  g.hp = hp; g.weapon = weapon; g.weaponLimit = limit;
+  prevIds = new Set();
+  $("#floorclear").classList.remove("open");
   render();
 }
 function randomSeed() { return String(Math.floor(Math.random() * 9007199254740991)); }
@@ -450,6 +508,8 @@ function render() {
     wc.textContent = "Unarmed";
   }
   $("#deck-count").textContent = g.dungeon.length;
+  $("#floor-chip").textContent = "Floor " + run.floor + (run.floor > 1 ? " · pays ×" + multFor(run.floor) : "");
+  $("#gold-count").textContent = run.unbanked;
 
   // room
   const room = $("#room");
@@ -593,7 +653,8 @@ function act(run) {
   floatText(fx.label, fx.tone);
   if (fx.buzz) buzz(fx.buzz);
   render();
-  if (g.status !== "playing") setTimeout(showEnd, 750);
+  if (g.status === "won") setTimeout(showFloorClear, 750);
+  else if (g.status === "lost") setTimeout(() => finishRun(false), 750);
 }
 
 $("#flee").addEventListener("click", () => {
@@ -604,21 +665,43 @@ $("#flee").addEventListener("click", () => {
 });
 
 /* ---------- overlays ---------- */
-function showEnd() {
-  const won = g.status === "won";
-  const s = score(g);
-  const isBest = saveBest(s);
-  $("#end-eyebrow").textContent = won ? "the dungeon lies empty" : "the dungeon keeps you";
+function showFloorClear() {
+  const floorScore = score(g);
+  const mult = multFor(run.floor);
+  run.lastEarned = Math.round(floorScore * mult);
+  run.unbanked += run.lastEarned;
+
+  $("#fc-eyebrow").textContent = "floor " + run.floor + " lies empty";
+  $("#fc-earned").textContent =
+    "floor score " + floorScore + (mult !== 1 ? " × " + mult : "") + " → " + run.lastEarned + " gold";
+  $("#fc-unbanked").textContent = "unbanked hoard " + run.unbanked;
+  $("#fc-health").textContent =
+    "You stand at " + g.hp + " health" +
+    (g.weapon ? ", " + cardName(g.weapon) + " in hand" +
+      (g.weaponLimit !== null ? " (dulled to ≤ " + g.weaponLimit + ")" : "") : ", bare-handed") + ".";
+  $("#btn-descend").textContent = "Descend — floor " + (run.floor + 1) + " pays ×" + multFor(run.floor + 1);
+  $("#btn-retreat").textContent = "Retreat with " + run.unbanked + " gold";
+  $("#floorclear").classList.add("open");
+}
+
+function finishRun(retreated) {
+  const kept = retreated ? run.unbanked : Math.floor(run.unbanked * SALVAGE);
+  const isBest = saveBests(kept, run.floor);
+
+  $("#end-eyebrow").textContent = retreated ? "you climb into daylight" : "the dungeon keeps you";
   const v = $("#end-verdict");
-  v.textContent = won ? "ESCAPED" : "SLAIN";
-  v.className = "verdict " + (won ? "won" : "lost");
-  $("#end-epitaph").textContent = won
-    ? "You climb into daylight with " + g.hp + " health to spare."
-    : "The " + (g.lastResolved ? cardName(g.lastResolved) : "dungeon") + " ends your descent. " +
-      (-s) + " menace still lurks below.";
-  $("#end-score").textContent = "score " + s;
-  const b = bestScore();
-  $("#end-best").textContent = (isBest ? "new best score" : b !== null ? "best " + b : "");
+  v.textContent = retreated ? "ESCAPED" : "SLAIN";
+  v.className = "verdict " + (retreated ? "won" : "lost");
+  $("#end-epitaph").textContent = retreated
+    ? "You retreat from floor " + run.floor + " with your hoard intact."
+    : "The " + (g.lastResolved ? cardName(g.lastResolved) : "dungeon") +
+      " ends your descent on floor " + run.floor + ". You salvage " + kept +
+      " of " + run.unbanked + " unbanked gold.";
+  $("#end-score").textContent = "hoard " + kept + " · floor " + run.floor;
+  const b = bests();
+  $("#end-best").textContent = isBest ? "new best hoard"
+    : b.hoard !== null ? "best hoard " + b.hoard + " · deepest floor " + b.floor : "";
+  $("#floorclear").classList.remove("open");
   $("#end").classList.add("open");
 }
 $("#btn-new").addEventListener("click", () => startRun(randomSeed()));
@@ -626,10 +709,13 @@ $("#btn-again").addEventListener("click", () => startRun(randomSeed()));
 $("#btn-retry").addEventListener("click", () => startRun(seedStr));
 $("#btn-daily").addEventListener("click", () => startRun(dailySeed()));
 $("#btn-daily2").addEventListener("click", () => startRun(dailySeed()));
+$("#btn-descend").addEventListener("click", descend);
+$("#btn-retreat").addEventListener("click", () => finishRun(true));
 $("#btn-daily").textContent = "Daily Dungeon · " + dailyLabel();
 (function initStart() {
-  const b = bestScore();
-  if (b !== null) $("#start-best").textContent = "best score " + b;
+  const b = bests();
+  if (b.hoard !== null)
+    $("#start-best").textContent = "best hoard " + b.hoard + " · deepest floor " + b.floor;
 })();
 
 /* ================================================================
@@ -639,6 +725,8 @@ window.__scroundel = {
   deckForSeed: (s) => { const d = createDungeon(); shuffle(d, BigInt(s)); return d.map(fmt).join(","); },
   start: (s) => startRun(s),
   state: () => g,
+  run: () => run,
+  render: () => render(),
   autoplay: (s) => {
     const G = newGame(BigInt(s));
     let steps = 0;

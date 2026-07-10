@@ -13,8 +13,11 @@ monetization, and roadmap.
 open it in any browser (phone or desktop, no server needed). It runs a
 line-for-line JavaScript port of the C# engine, verified to produce
 bit-identical dungeons and outcomes for the same seeds, and includes the
-Daily Dungeon (everyone gets the same date-seeded deck) and best-score
-tracking. Use it for Phase 0 playtesting while the Unity app is built.
+Daily Dungeon (everyone gets the same date-seeded deck), best-hoard tracking,
+and the **Descend or Retreat** push-your-luck loop from GAME_PLAN §3.5: clear
+a floor, then bank your gold or descend to a fresh floor at a higher
+multiplier — dying salvages only 20% of the unbanked hoard. Use it for
+Phase 0 playtesting while the Unity app is built.
 
 ## What exists right now
 

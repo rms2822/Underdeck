@@ -137,6 +137,8 @@ it feeds: *in-run* systems make every run feel different (replayability);
    Converts every win into a fresh push-your-luck decision, creates natural
    "one more floor" tension, and gives the rewarded-ad second wind its
    highest-stakes moment. Cheapest system on this list; build it first.
+   **✅ Built in the web prototype** — ×1/×1.5/×2 then +1 per floor, death
+   salvages 20% of the unbanked hoard; tune both from playtests.
 2. **Floor themes (deck mutators) — M.** Each descent offers **two doors**
    with visible modifiers — *Crypt:* +2 high enemies, −2 elixirs; *Armory:*
    +2 weapons, all weapons −1 power; *Fungal Garden:* +2 elixirs, elixirs
