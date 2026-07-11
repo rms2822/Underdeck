@@ -3,64 +3,77 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scroundel</title>
+<title>Underdeck</title>
 </head>
 <body>
 <!-- ART:START -->
-<title>Scroundel</title>
+<title>Underdeck</title>
 <style>
-  /* ============ Torchlit Crypt — single committed theme ============ */
+  /* ============ Slate & Gold — hex dungeon aesthetic ============ */
   :root {
-    --ground: #14100e;
-    --stone: #241d19;
-    --stone-hi: #33291f;
-    --stone-lo: #1b1512;
-    --bone: #e8dcc8;
-    --bone-dim: #a3937c;
-    --bone-faint: #6e6152;
-    --ember: #e25822;
-    --ember-deep: #93380f;
-    --verdigris: #7fa88f;
-    --steel: #9baab8;
+    --ground: #0e1216;
+    --wall: #161c23;
+    --wall-hi: #1e2630;
+    --slate: #232b35;
+    --slate-lo: #181f27;
+    --parchment: #e9e1cf;
+    --parchment-lo: #cfc4ab;
+    --ink: #171310;
+    --bone: #dfd8c8;
+    --bone-dim: #97917f;
+    --bone-faint: #655f52;
     --gold: #d9a441;
+    --gold-hi: #f0c66a;
+    --gold-deep: #8a6420;
+    --blood: #c03434;
+    --blood-deep: #7c1e1e;
+    --verd: #7fa88f;
+    --steel: #9baab8;
+    --hex-mono: #b8c0cc;
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
     --mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
-    background: var(--ground);
+    background:
+      radial-gradient(140% 90% at 50% 0%, rgba(217,164,65,.05), transparent 55%),
+      var(--ground);
     color: var(--bone);
     font-family: var(--serif);
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
+  /* stone wall blocks */
   body::before {
-    content: "";
-    position: fixed; inset: 0; pointer-events: none; z-index: 0;
-    background: radial-gradient(120% 55% at 50% -8%, rgba(226, 88, 34, 0.15), transparent 60%);
-    animation: torch 6s ease-in-out infinite alternate;
+    content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 46px, rgba(0,0,0,.28) 46px 48px),
+      repeating-linear-gradient(90deg, transparent 0 74px, rgba(0,0,0,.2) 74px 76px),
+      repeating-linear-gradient(90deg, transparent 0 148px, rgba(255,255,255,.014) 148px 150px),
+      linear-gradient(180deg, var(--wall-hi), var(--wall) 40%, var(--ground));
+    opacity: .8;
+    mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
   }
-  @keyframes torch { from { opacity: 0.7; } to { opacity: 1; } }
   #motes { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   #pain {
     position: fixed; inset: 0; pointer-events: none; z-index: 7; opacity: 0;
-    background: radial-gradient(120% 100% at 50% 50%, transparent 52%, rgba(226,88,34,.4));
+    background: radial-gradient(120% 100% at 50% 50%, transparent 52%, rgba(192,52,52,.45));
   }
   #pain.on { animation: pain .45s ease; }
   @keyframes pain { 15% { opacity: 1; } 100% { opacity: 0; } }
 
   button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
-  button:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  button:disabled { cursor: default; }
 
   #app {
     position: relative; z-index: 1;
-    max-width: 430px; margin: 0 auto;
-    min-height: 100dvh;
-    display: flex; flex-direction: column;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    user-select: none; -webkit-user-select: none;
-    touch-action: manipulation;
+    max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    user-select: none; -webkit-user-select: none; touch-action: manipulation;
   }
   #app.shake { animation: shake .3s ease; }
   #app.shake-big { animation: shake .55s ease; }
@@ -71,226 +84,239 @@
     88% { transform: translate(-2px, 0); }
   }
 
-  /* ============ top bar ============ */
-  #topbar { display: flex; align-items: center; gap: 12px; }
-  .chip { font-family: var(--mono); font-size: 12px; color: var(--bone-dim); font-variant-numeric: tabular-nums; }
-  #floor-chip { flex: 1; letter-spacing: .1em; text-transform: uppercase; }
-  #gold-chip { color: var(--gold); font-size: 13px; }
-  #mute { font-size: 15px; opacity: .7; padding: 2px 4px; }
-
-  /* ============ the room ============ */
-  #room {
-    flex: 1; display: grid; grid-template-columns: 1fr 1fr;
-    gap: 12px; align-content: center; padding: 14px 0;
-    perspective: 900px;
+  /* ============ shared hex bits ============ */
+  .hexclip { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+  .logo {
+    font-weight: 800; letter-spacing: .1em;
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-deep));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,.8));
   }
-  .card {
-    position: relative; aspect-ratio: 3 / 4; border-radius: 10px;
-    background: linear-gradient(160deg, var(--stone-hi), var(--stone) 45%, var(--stone-lo));
-    box-shadow: inset 0 1px 0 rgba(232,220,200,.07), 0 8px 20px rgba(0,0,0,.5);
-    border: 1px solid rgba(232,220,200,.1);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; overflow: hidden;
+  .caps { font-family: var(--serif); letter-spacing: .28em; text-transform: uppercase; font-size: 10.5px; color: var(--bone-dim); }
+  .caps.faint { color: var(--bone-faint); }
+
+  /* ============ top bar ============ */
+  #topbar { display: flex; align-items: center; gap: 10px; min-height: 30px; }
+  #topbar .logo { font-size: 17px; }
+  #depth-label { flex: 1; text-align: center; }
+  #mute { font-size: 14px; opacity: .65; }
+
+  /* ============ deck emblem ============ */
+  #deckrow { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0; margin-top: auto; }
+  #hint-line { margin-bottom: auto; }
+  #deck-hex {
+    width: 66px; height: 74px; position: relative;
+    display: grid; place-items: center;
+    background: linear-gradient(160deg, var(--gold), var(--gold-deep));
+  }
+  #deck-hex .inner {
+    position: absolute; inset: 3px; display: grid; place-items: center;
+    background:
+      repeating-linear-gradient(45deg, rgba(217,164,65,.07) 0 4px, transparent 4px 8px),
+      linear-gradient(170deg, var(--slate), var(--slate-lo));
+  }
+  #deck-count { font-size: 24px; color: var(--gold-hi); font-weight: 600; font-variant-numeric: tabular-nums; }
+  #peek-chip { font-family: var(--mono); font-size: 10px; color: var(--bone-faint); min-height: 13px; }
+  #room-label { margin-top: 1px; }
+
+  /* ============ room row ============ */
+  #room { display: flex; justify-content: center; gap: 7px; min-height: 118px; align-items: flex-start; padding: 4px 0 0; }
+  .cardhex { position: relative; width: 88px; flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .cardhex .frame {
+    width: 84px; height: 94px; position: relative;
+    background: var(--hex-mono);
     transition: transform .12s ease;
   }
-  .card:active { transform: scale(.96); }
-  .card.selected { outline: 2px solid var(--gold); outline-offset: -2px; transform: scale(.97); }
-  .card .suit { position: absolute; top: 8px; left: 11px; font-size: 15px; }
-  .card .val { position: absolute; top: 6px; right: 11px; font-size: 19px; font-weight: 700; }
-  .card .art {
-    font-size: 52px; line-height: 1.15;
-    filter: saturate(.8) drop-shadow(0 5px 10px rgba(0,0,0,.65));
+  .cardhex:active .frame { transform: scale(.94); }
+  .cardhex .fill {
+    position: absolute; inset: 2.5px; display: grid; place-items: center;
+    background: radial-gradient(90% 90% at 50% 32%, var(--slate) 0%, var(--slate-lo) 85%);
   }
-  .card .num { font-size: 30px; line-height: 1; font-weight: 700; }
-  .card .name { font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--bone-dim); text-align: center; padding: 0 6px; }
-  .card.enemy  { border-color: rgba(226,88,34,.35); }
-  .card.enemy  .suit, .card.enemy .val { color: var(--ember); }
-  .card.weapon { border-color: rgba(155,170,184,.35); }
-  .card.weapon .suit, .card.weapon .val { color: var(--steel); }
-  .card.elixir { border-color: rgba(127,168,143,.38); }
-  .card.elixir .suit, .card.elixir .val { color: var(--verdigris); }
-  .card.boss { border-color: rgba(226,88,34,.65); animation: bossglow 2.4s ease-in-out infinite; }
-  .card.boss .art { font-size: 60px; }
-  @keyframes bossglow {
-    50% { box-shadow: 0 0 26px rgba(226,88,34,.3), inset 0 1px 0 rgba(232,220,200,.07); }
+  .cardhex .art { font-size: 40px; line-height: 1; filter: saturate(.85) drop-shadow(0 4px 7px rgba(0,0,0,.6)); }
+  .cardhex .hexname {
+    font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--bone-dim); text-align: center; line-height: 1.25; min-height: 20px; max-width: 88px;
   }
-  .card.enter { animation: flipin .45s ease backwards; }
-  @keyframes flipin { from { opacity: 0; transform: rotateY(65deg) translateY(12px); } }
-  .card.hit { animation: cardhit .32s ease; }
-  @keyframes cardhit {
-    0% { filter: brightness(2.4); }
-    45% { transform: translateY(7px) scale(.95); filter: brightness(1.7); }
+  .badge {
+    position: absolute; z-index: 2; width: 24px; height: 24px; border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--serif); font-size: 13px; font-weight: 700;
+    background: #10151b; border: 1.5px solid var(--hex-mono); color: #fff;
   }
-  .card.resolve { animation: resolveout .22s ease forwards; }
-  @keyframes resolveout { to { opacity: 0; transform: scale(.88) translateY(-10px); } }
-  .card.fleeing { animation: fleedown .3s ease forwards; }
-  @keyframes fleedown { to { opacity: 0; transform: translateY(90px) rotate(5deg); } }
+  .badge.val { top: -3px; left: 1px; }
+  .badge.kind { top: -3px; right: 1px; font-size: 11px; }
+  .cardhex.monster .frame { background: var(--hex-mono); }
+  .cardhex.monster .badge.kind { background: #1a1114; }
+  .cardhex.elite .frame { background: linear-gradient(160deg, var(--blood), var(--blood-deep)); }
+  .cardhex.elite .badge { border-color: var(--blood); }
+  .cardhex.boss .frame { width: 116px; height: 130px; background: linear-gradient(160deg, var(--gold), var(--blood-deep)); }
+  .cardhex.boss { width: 120px; }
+  .cardhex.boss .art { font-size: 58px; }
+  .cardhex.potion .fill, .cardhex.treasure .fill, .cardhex.cache .fill {
+    background: radial-gradient(95% 95% at 50% 30%, var(--parchment) 0%, var(--parchment-lo) 90%);
+  }
+  .cardhex.potion .frame { background: #f4efe2; }
+  .cardhex.treasure .frame, .cardhex.cache .frame { background: linear-gradient(160deg, var(--gold-hi), var(--gold)); }
+  .cardhex.curse .frame { background: linear-gradient(160deg, #6b4a8c, #2e1f42); }
+  .cardhex.curse .fill { background: radial-gradient(90% 90% at 50% 32%, #241a33, #171021); }
+  .cardhex.enter { animation: hexin .4s ease backwards; }
+  @keyframes hexin { from { opacity: 0; transform: translateY(12px) scale(.9); } }
+  .cardhex.hit .frame { animation: hexhit .32s ease; }
+  @keyframes hexhit { 0% { filter: brightness(2.3); } 45% { transform: translateY(6px) scale(.94); filter: brightness(1.6); } }
+  .cardhex.resolve { animation: hexout .22s ease forwards; }
+  @keyframes hexout { to { opacity: 0; transform: scale(.85) translateY(-8px); } }
+  .cardhex.fleeing { animation: hexflee .3s ease forwards; }
+  @keyframes hexflee { to { opacity: 0; transform: translateY(70px) rotate(5deg); } }
+  .cardhex.selected .frame { background: var(--gold-hi); box-shadow: 0 0 16px rgba(217,164,65,.5); }
+  .hexslot {
+    width: 84px; height: 94px; opacity: .5;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 94"><path d="M42 2 L80 24.5 V69.5 L42 92 L4 69.5 V24.5 Z" fill="none" stroke="%2397917f" stroke-width="1.6" stroke-dasharray="5 5"/></svg>');
+    background-size: 100% 100%;
+  }
 
   /* floating combat text */
   .float {
-    position: absolute; left: 50%; top: 32%; transform: translateX(-50%);
-    font-family: var(--serif); font-size: 38px; font-weight: 700;
+    position: absolute; left: 50%; top: 30%; transform: translateX(-50%);
+    font-family: var(--serif); font-size: 36px; font-weight: 700;
     pointer-events: none; z-index: 5;
     animation: floatUp 1s ease-out forwards;
-    text-shadow: 0 2px 12px rgba(0,0,0,.8);
+    text-shadow: 0 2px 12px rgba(0,0,0,.85);
   }
-  .float.ember { color: var(--ember); }
-  .float.verd  { color: var(--verdigris); }
+  .float.blood { color: var(--blood); }
+  .float.verd  { color: var(--verd); }
   .float.steel { color: var(--steel); }
   .float.bone  { color: var(--bone-dim); }
   .float.gold  { color: var(--gold); }
-  @keyframes floatUp { to { opacity: 0; transform: translateX(-50%) translateY(-52px); } }
+  @keyframes floatUp { to { opacity: 0; transform: translateX(-50%) translateY(-48px); } }
 
-  /* ============ hero tableau ============ */
-  #tableau { display: grid; grid-template-columns: 1fr 1.5fr 1fr; gap: 10px; }
-  .slab {
-    border-radius: 10px; padding: 10px 8px;
-    background: linear-gradient(170deg, var(--stone-hi), var(--stone-lo));
-    border: 1px solid rgba(232,220,200,.12);
-    box-shadow: 0 6px 14px rgba(0,0,0,.4);
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    text-align: center;
+  /* ============ hero row ============ */
+  #herorow { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 4px 0 0; position: relative; }
+  .kit { position: relative; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .kit .frame { width: 72px; height: 80px; position: relative; background: #f4efe2; }
+  .kit .fill { position: absolute; inset: 2.5px; display: grid; place-items: center;
+    background: radial-gradient(95% 95% at 50% 30%, var(--parchment), var(--parchment-lo)); }
+  .kit .art { font-size: 32px; filter: saturate(.85) drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
+  .kit.empty .frame { background: none; }
+  .kit.empty .fill { background: none; }
+  .kit .frame.slot {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80"><path d="M36 2 L68 21 V59 L36 78 L4 59 V21 Z" fill="none" stroke="%2397917f" stroke-width="1.5" stroke-dasharray="5 5"/></svg>');
+    background-size: 100% 100%; opacity: .55;
   }
-  .slab .art { font-size: 26px; line-height: 1.1; filter: saturate(.8) drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
-  .slab-label {
-    font-family: var(--mono); font-size: 9px; letter-spacing: .18em;
-    color: var(--bone-faint); text-transform: uppercase;
-  }
-  .slab-num { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; color: var(--bone); }
-  .slab-num .limit { color: var(--ember); }
-  .minipile {
-    width: 24px; height: 32px; border-radius: 4px; margin-bottom: 2px;
-    background: linear-gradient(160deg, #3a2c22, #241d19);
-    border: 1px solid rgba(232,220,200,.28);
-    box-shadow: 2.5px 2.5px 0 #16110e, 5px 5px 0 rgba(232,220,200,.09);
-  }
-  .slab.hero { border-color: rgba(232,220,200,.22); }
-  .slab.hero .art { font-size: 32px; }
-  .slab.hero.pulse { animation: healpulse .55s ease; }
-  @keyframes healpulse { 30% { box-shadow: 0 0 0 4px rgba(127,168,143,.55), 0 6px 14px rgba(0,0,0,.4); } }
-  .hp-wrap { width: 100%; display: flex; flex-direction: column; gap: 3px; align-items: center; }
-  .hp-bar { width: 92%; height: 7px; border-radius: 4px; background: rgba(0,0,0,.5); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.7); }
-  #hp-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--ember-deep), var(--ember)); transition: width .45s ease; }
-  #hp-fill.high { background: linear-gradient(90deg, #5d7a68, var(--verdigris)); }
-  #hp-num { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
+  #hero { width: 96px; }
+  #hero .frame { width: 90px; height: 100px; background: linear-gradient(160deg, var(--gold-hi), var(--gold-deep)); }
+  #hero .fill { background: radial-gradient(90% 90% at 50% 30%, #2b3440, var(--slate-lo)); }
+  #hero .art { font-size: 46px; filter: grayscale(1) brightness(1.9) sepia(.25) drop-shadow(0 4px 7px rgba(0,0,0,.7)); }
+  #hero.pulse .frame { animation: heropulse .55s ease; }
+  @keyframes heropulse { 30% { box-shadow: 0 0 0 5px rgba(127,168,143,.55); } }
+  .kitline { font-family: var(--mono); font-size: 10.5px; color: var(--bone-dim); font-variant-numeric: tabular-nums; text-align: center; }
+  .kitline .limit { color: var(--blood); }
+  .kitline .heart { color: var(--blood); }
+  .badge.small { width: 21px; height: 21px; font-size: 11px; }
 
-  /* ============ class ability bar ============ */
-  #ability-bar {
-    width: 100%; margin-top: 10px;
-    display: flex; align-items: center; gap: 12px; text-align: left;
-    border-radius: 10px; padding: 9px 14px;
-    background: linear-gradient(170deg, var(--stone-hi), var(--stone-lo));
-    border: 1px solid rgba(217,164,65,.3);
-    box-shadow: 0 6px 14px rgba(0,0,0,.4);
-  }
-  #ability-bar.armed { border-color: var(--gold); box-shadow: 0 0 14px rgba(217,164,65,.25); }
-  #ability-bar.unavail { opacity: .45; }
-  #ability-bar:disabled { cursor: default; }
-  #ability-pips { font-size: 17px; letter-spacing: .1em; white-space: nowrap; }
-  #ability-pips .spent { opacity: .22; filter: grayscale(1); }
-  .ab-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  #ability-label { font-size: 14px; color: var(--gold); }
-  #ability-hint { font-family: var(--mono); font-size: 10px; color: var(--bone-dim); }
+  #statline { display: flex; justify-content: center; align-items: center; gap: 16px; font-family: var(--mono); font-size: 12px; padding: 2px 0; }
+  #focus-pips { letter-spacing: .12em; color: var(--gold); font-size: 13px; }
+  #focus-pips .off { color: var(--bone-faint); }
+  #gold-line { color: var(--gold); }
+  #bloodpact-btn { font-family: var(--mono); font-size: 10px; color: var(--blood); border: 1px solid rgba(192,52,52,.5); border-radius: 6px; padding: 2px 7px; }
 
-  /* ============ flee bar ============ */
-  footer { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 10px; }
-  #flee {
-    width: 100%; padding: 12px; border-radius: 10px;
-    border: 1px solid rgba(232,220,200,.22);
-    letter-spacing: .2em; text-transform: uppercase; font-size: 13px; color: var(--bone);
+  /* ============ skill hand ============ */
+  #handrow { display: flex; gap: 8px; align-items: stretch; padding: 4px 0 0; }
+  .skill {
+    flex: 1; min-width: 0; border-radius: 9px; padding: 7px 6px 6px;
+    background: linear-gradient(170deg, var(--slate), var(--slate-lo));
+    border: 1px solid rgba(223,216,200,.16);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    box-shadow: 0 5px 12px rgba(0,0,0,.4);
   }
-  #flee:disabled { opacity: .4; cursor: default; }
-  #flee-note { font-size: 12px; color: var(--bone-faint); font-style: italic; min-height: 1.2em; text-align: center; }
+  .skill:not(:disabled):active { transform: scale(.96); }
+  .skill .s-art { font-size: 21px; filter: saturate(.85) drop-shadow(0 2px 4px rgba(0,0,0,.6)); }
+  .skill .s-name { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--bone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .skill .s-cost { font-family: var(--mono); font-size: 9px; color: var(--gold); }
+  .skill:disabled { opacity: .38; }
+  .skill.locked { border-color: rgba(192,52,52,.5); }
+  #flee-btn {
+    flex: 0 0 74px; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    background: linear-gradient(180deg, var(--blood), var(--blood-deep));
+    color: #fff; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
+    box-shadow: 0 5px 12px rgba(0,0,0,.45);
+  }
+  #flee-btn .f-art { font-size: 18px; }
+  #flee-btn:disabled { opacity: .35; filter: grayscale(.6); }
+  #hint-line { text-align: center; font-size: 11.5px; font-style: italic; color: var(--bone-faint); min-height: 1.3em; padding-top: 3px; }
 
-  /* ============ action sheet ============ */
-  #backdrop {
-    position: fixed; inset: 0; background: rgba(6,4,3,.6); z-index: 8;
-    opacity: 0; pointer-events: none; transition: opacity .2s;
-  }
+  /* ============ sheet ============ */
+  #backdrop { position: fixed; inset: 0; background: rgba(5,7,9,.65); z-index: 8; opacity: 0; pointer-events: none; transition: opacity .2s; }
   #backdrop.open { opacity: 1; pointer-events: auto; }
   #sheet {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
-    max-width: 430px; margin: 0 auto; max-height: 78dvh; overflow-y: auto;
-    background: linear-gradient(180deg, var(--stone-hi), var(--stone));
-    border-radius: 14px 14px 0 0;
-    border: 1px solid rgba(232,220,200,.12); border-bottom: 0;
-    padding: 18px 16px calc(16px + env(safe-area-inset-bottom));
+    max-width: 430px; margin: 0 auto; max-height: 80dvh; overflow-y: auto;
+    background: linear-gradient(180deg, var(--wall-hi), var(--wall));
+    border-radius: 14px 14px 0 0; border: 1px solid rgba(217,164,65,.25); border-bottom: 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
     transform: translateY(105%); transition: transform .24s ease;
     display: flex; flex-direction: column; gap: 8px;
   }
   #sheet.open { transform: translateY(0); }
-  #sheet h3 { font-size: 19px; font-weight: 600; text-wrap: balance; }
-  #sheet h3 .h-art { font-size: 24px; margin-right: 6px; filter: saturate(.8); }
-  #sheet h3 span.dim { color: var(--bone-dim); font-size: 14px; font-style: italic; }
+  #sheet h3 { font-size: 18px; font-weight: 600; text-wrap: balance; }
+  #sheet h3 .h-art { font-size: 22px; margin-right: 6px; filter: saturate(.85); }
+  #sheet h3 .dim { color: var(--bone-dim); font-size: 13px; font-style: italic; }
+  #sheet .note { font-size: 12px; font-style: italic; color: var(--bone-dim); line-height: 1.4; }
   .act {
-    text-align: left; padding: 12px 14px; border-radius: 8px;
-    background: var(--stone-lo); border: 1px solid rgba(232,220,200,.14);
+    text-align: left; padding: 11px 13px; border-radius: 8px;
+    background: rgba(0,0,0,.3); border: 1px solid rgba(223,216,200,.15);
     display: flex; flex-direction: column; gap: 3px;
   }
-  .act:not(:disabled):active { background: var(--ground); }
-  .act:disabled { opacity: .45; cursor: default; }
-  .act .t { font-size: 15px; }
-  .act .sub { font-family: var(--mono); font-size: 11px; color: var(--bone-dim); }
-  .act.lethal { border-color: rgba(226,88,34,.55); }
-  .act.lethal .sub { color: var(--ember); }
-  .act.classact { border-color: rgba(217,164,65,.45); }
-  .act.classact .t { color: var(--gold); }
+  .act:not(:disabled):active { background: rgba(0,0,0,.55); }
+  .act:disabled { opacity: .45; }
+  .act .t { font-size: 14.5px; }
+  .act .sub { font-family: var(--mono); font-size: 10.5px; color: var(--bone-dim); }
+  .act.lethal { border-color: rgba(192,52,52,.6); }
+  .act.lethal .sub { color: var(--blood); }
+  .act.goldact { border-color: rgba(217,164,65,.45); }
+  .act.goldact .t { color: var(--gold); }
   .act.cancel { border-color: transparent; background: none; align-items: center; }
   .act.cancel .t { color: var(--bone-faint); font-style: italic; font-size: 13px; }
+  .shoprow { display: flex; align-items: center; gap: 10px; }
+  .shoprow .s-icon { font-size: 22px; filter: saturate(.85); }
+  .shoprow .s-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .shoprow .price { font-family: var(--mono); font-size: 12px; color: var(--gold); white-space: nowrap; }
 
   /* ============ overlays ============ */
   .overlay {
     position: fixed; inset: 0; z-index: 12; overflow-y: auto;
-    background: radial-gradient(120% 60% at 50% 0%, rgba(226,88,34,.1), transparent 55%), var(--ground);
+    background:
+      radial-gradient(120% 60% at 50% 0%, rgba(217,164,65,.08), transparent 55%),
+      var(--ground);
     display: none; flex-direction: column; align-items: center; justify-content: center;
-    gap: 18px; padding: 40px 26px; text-align: center;
+    gap: 16px; padding: 40px 26px; text-align: center;
   }
   .overlay.open { display: flex; }
-  .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .3em; color: var(--bone-faint); text-transform: uppercase; }
-  .title { font-size: clamp(38px, 11vw, 52px); letter-spacing: .14em; font-weight: 600; text-wrap: balance; }
-  .menagerie { font-size: 26px; letter-spacing: .35em; filter: saturate(.75) drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
-  .rule-flourish { width: 46px; height: 2px; background: var(--ember); border-radius: 1px; }
-  .digest { max-width: 34ch; display: flex; flex-direction: column; gap: 10px; text-align: left; }
-  .digest p { font-size: 14.5px; line-height: 1.5; color: var(--bone-dim); }
-  .digest .s-enemy { color: var(--ember); }
-  .digest .s-weapon { color: var(--steel); }
-  .digest .s-elixir { color: var(--verdigris); }
-  .digest .s-gold { color: var(--gold); }
-  .btn-col { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 6px; }
+  .overlay .logo.big { font-size: clamp(40px, 12vw, 54px); letter-spacing: .08em; }
+  .flourish { width: 46px; height: 2px; background: var(--gold); border-radius: 1px; }
+  .digest { max-width: 36ch; display: flex; flex-direction: column; gap: 9px; text-align: left; }
+  .digest p { font-size: 13.5px; line-height: 1.5; color: var(--bone-dim); }
+  .digest b { color: var(--bone); font-weight: 600; }
+  .digest .g { color: var(--gold); } .digest .r { color: var(--blood); } .digest .v { color: var(--verd); }
+  .btn-col { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 4px; }
   .cta {
     padding: 14px; border-radius: 8px; letter-spacing: .18em; text-transform: uppercase; font-size: 13px;
-    background: linear-gradient(180deg, var(--ember), var(--ember-deep)); color: #1a0d06; font-weight: 700;
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold-deep)); color: #221604; font-weight: 800;
   }
-  .cta.ghost { background: none; border: 1px solid rgba(232,220,200,.25); color: var(--bone); font-weight: 400; }
-  .verdict { font-size: clamp(40px, 12vw, 56px); letter-spacing: .12em; font-weight: 600; }
-  .verdict.won { color: var(--verdigris); }
-  .verdict.lost { color: var(--ember); }
-  .epitaph { font-style: italic; color: var(--bone-dim); max-width: 30ch; text-wrap: balance; line-height: 1.45; }
-  .score-line { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 15px; color: var(--bone); }
-  .gold-text { color: var(--gold); }
-  .best-line { font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
-
-  /* class select */
-  .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 380px; }
-  .class-opt {
-    display: flex; gap: 10px; align-items: center; text-align: left;
-    padding: 10px 12px; border-radius: 10px;
-    background: linear-gradient(170deg, var(--stone-hi), var(--stone-lo));
-    border: 1px solid rgba(232,220,200,.14);
-  }
-  .class-opt:active { border-color: var(--gold); }
-  .class-opt .c-art { font-size: 26px; filter: saturate(.8) drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
-  .class-opt .c-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-  .class-opt .c-name { font-size: 13.5px; }
-  .class-opt .c-card { font-family: var(--mono); font-size: 9.5px; color: var(--gold); letter-spacing: .12em; }
-  .class-opt .c-blurb { font-size: 10.5px; color: var(--bone-dim); line-height: 1.35; }
-  .class-opt.wide { grid-column: 1 / -1; }
+  .cta.ghost { background: none; border: 1px solid rgba(223,216,200,.28); color: var(--bone); font-weight: 400; }
+  .verdict { font-size: clamp(38px, 11vw, 52px); letter-spacing: .1em; font-weight: 700; }
+  .verdict.good { color: var(--gold); }
+  .verdict.bad { color: var(--blood); }
+  .bigart { font-size: 54px; filter: saturate(.85) drop-shadow(0 6px 12px rgba(0,0,0,.7)); }
+  .epitaph { font-style: italic; color: var(--bone-dim); max-width: 32ch; text-wrap: balance; line-height: 1.5; }
+  .scoretable { font-family: var(--mono); font-size: 12.5px; color: var(--bone-dim); display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
+  .scoretable .total { color: var(--gold); font-size: 16px; margin-top: 4px; }
+  .best-line { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
 
   @media (prefers-reduced-motion: reduce) {
-    body::before, .card.boss, .card.enter, .card.hit, .card.resolve, .card.fleeing,
-    #app.shake, #app.shake-big, #pain.on, .slab.hero.pulse { animation: none !important; }
+    .cardhex.enter, .cardhex.hit .frame, .cardhex.resolve, .cardhex.fleeing,
+    #app.shake, #app.shake-big, #pain.on, #hero.pulse .frame { animation: none !important; }
     .float { animation-duration: .01s; }
-    #sheet, #backdrop, #hp-fill { transition: none; }
+    #sheet, #backdrop { transition: none; }
     #motes { display: none; }
   }
 </style>
@@ -300,113 +326,92 @@
 
 <div id="app" aria-live="polite">
   <div id="topbar">
-    <span class="chip" id="floor-chip">Floor 1</span>
-    <span class="chip" id="gold-chip">🪙 <span id="gold-count">0</span></span>
+    <span class="logo">UNDERDECK</span>
+    <span class="caps faint" id="depth-label"></span>
     <button id="mute" aria-label="Toggle sound">🔊</button>
+  </div>
+
+  <div id="deckrow">
+    <div id="deck-hex" class="hexclip"><div class="inner hexclip"><span id="deck-count">0</span></div></div>
+    <span class="caps" id="deck-name">DUNGEON DECK</span>
+    <span id="peek-chip"></span>
+    <span class="caps faint" id="room-label">ROOM 1</span>
   </div>
 
   <main id="room"></main>
 
-  <section id="tableau">
-    <div class="slab" id="deck-slab">
-      <div class="minipile" aria-hidden="true"></div>
-      <span class="slab-label">Dungeon</span>
-      <span class="slab-num" id="deck-count">40</span>
+  <div id="herorow">
+    <div class="kit" id="weapon-kit"></div>
+    <div class="kit" id="hero">
+      <div class="frame hexclip"><div class="fill hexclip"><span class="art" aria-hidden="true">👤</span></div></div>
+      <span class="kitline"><span class="heart">♥</span> <span id="hp-num">20/20</span></span>
     </div>
-    <div class="slab hero" id="hero-slab">
-      <span class="art" id="hero-art" aria-hidden="true">🛡️</span>
-      <div class="hp-wrap">
-        <div class="hp-bar"><div id="hp-fill" style="width:100%"></div></div>
-        <span id="hp-num">20 / 20</span>
-      </div>
-    </div>
-    <div class="slab" id="hand-slab">
-      <span class="art" id="weapon-art" aria-hidden="true">✊</span>
-      <span class="slab-label" id="weapon-name">Unarmed</span>
-      <span class="slab-num" id="weapon-info">—</span>
-    </div>
-  </section>
+    <div class="kit" id="relic-kit"></div>
+  </div>
 
-  <button id="ability-bar" hidden>
-    <span id="ability-pips"></span>
-    <span class="ab-text">
-      <span id="ability-label"></span>
-      <span id="ability-hint"></span>
-    </span>
-  </button>
+  <div id="statline">
+    <span id="focus-pips"></span>
+    <button id="bloodpact-btn" hidden>+1 ◆ for 2 ♥</button>
+    <span id="gold-line">🪙 0</span>
+  </div>
 
-  <footer>
-    <button id="flee">Flee the Room</button>
-    <p id="flee-note"></p>
-  </footer>
+  <div id="handrow"></div>
+  <p id="hint-line"></p>
 </div>
 
 <div id="backdrop"></div>
 <div id="sheet" role="dialog" aria-modal="true" aria-label="Choose an action"></div>
 
 <div class="overlay open" id="start">
-  <p class="eyebrow">A dungeon of forty-four cards</p>
-  <h1 class="title">SCROUNDEL</h1>
-  <p class="menagerie" aria-hidden="true">🐀 👺 💀 👹 🐉</p>
-  <div class="rule-flourish"></div>
+  <p class="caps">descend · deal · survive</p>
+  <h1 class="logo big">UNDERDECK</h1>
+  <p class="caps faint">the dungeon is a deck that wants you dead</p>
+  <div class="flourish"></div>
   <div class="digest">
-    <p><span class="s-enemy">Monsters (♣ ♠)</span> strike for their value. Fight bare-handed, or let your weapon take the blow.</p>
-    <p><span class="s-weapon">Weapons (♦)</span> dull with use — after a kill, a blade only cuts monsters of equal or lesser value.</p>
-    <p><span class="s-elixir">Elixirs (♥)</span> heal, but only the first you drink in each room.</p>
-    <p>Flee a room before acting in it — never twice in a row.</p>
-    <p><span class="s-gold">Clear all 44 cards</span> and choose: retreat with your gold, or descend — deeper floors pay more, but dying forfeits most of your unbanked hoard.</p>
+    <p><b class="r">Monsters (♠♣)</b> deal their threat. Your weapon absorbs its power — but after a kill it only cuts <b>strictly weaker</b> monsters.</p>
+    <p><b class="v">Potions (♥)</b> heal, one per room. <b class="g">Treasure (♦)</b> is gold; face diamonds hold skill drafts.</p>
+    <p>Face <b>3 of each room's 4 cards</b>, carry the last forward. Flee a fresh room — never twice in a row.</p>
+    <p>Each room deal a <b>hand of 3 skills</b> and spend <b class="g">2 ◆ focus</b>. Slay three Depth bosses to escape. Relics rewrite the rules.</p>
   </div>
   <div class="btn-col">
     <button class="cta" id="btn-new">Begin the Descent</button>
-    <button class="cta ghost" id="btn-daily">Daily Dungeon</button>
+    <button class="cta ghost" id="btn-daily">Daily Descent</button>
   </div>
   <p class="best-line" id="start-best"></p>
 </div>
 
-<div class="overlay" id="classpick">
-  <p class="eyebrow">the red court answers</p>
-  <h2 class="title" style="font-size:clamp(26px,7vw,34px)">CHOOSE YOUR CLASS</h2>
-  <p class="epitaph">Each carries two jokers 🃏 — spend them on your class ability.</p>
-  <div class="class-grid" id="class-grid"></div>
-  <p class="best-line">classes designed &amp; playtested on the physical deck</p>
-</div>
-
-<div class="overlay" id="floorclear">
-  <p class="eyebrow" id="fc-eyebrow"></p>
-  <h1 class="verdict won">FLOOR CLEARED</h1>
-  <div class="rule-flourish"></div>
-  <p class="epitaph" id="fc-health"></p>
-  <p class="score-line gold-text" id="fc-earned"></p>
-  <p class="score-line" id="fc-unbanked"></p>
-  <p class="best-line">die below and you keep a fifth of it</p>
-  <div class="btn-col">
-    <button class="cta" id="btn-descend">Descend</button>
-    <button class="cta ghost" id="btn-retreat">Retreat</button>
-  </div>
+<div class="overlay" id="interstitial">
+  <p class="caps" id="int-eyebrow"></p>
+  <p class="bigart" id="int-art"></p>
+  <h1 class="verdict" id="int-title"></h1>
+  <div class="flourish"></div>
+  <p class="epitaph" id="int-text"></p>
+  <div class="btn-col"><button class="cta" id="int-btn"></button></div>
 </div>
 
 <div class="overlay" id="end">
-  <p class="eyebrow" id="end-eyebrow"></p>
+  <p class="caps" id="end-eyebrow"></p>
+  <p class="bigart" id="end-art"></p>
   <h1 class="verdict" id="end-verdict"></h1>
-  <p class="menagerie" id="end-art" aria-hidden="true"></p>
-  <div class="rule-flourish"></div>
+  <div class="flourish"></div>
   <p class="epitaph" id="end-epitaph"></p>
-  <p class="score-line" id="end-score"></p>
+  <div class="scoretable" id="end-score"></div>
   <p class="best-line" id="end-best"></p>
   <div class="btn-col">
     <button class="cta" id="btn-again">Descend Again</button>
-    <button class="cta ghost" id="btn-retry">Retry This Dungeon</button>
-    <button class="cta ghost" id="btn-daily2">Daily Dungeon</button>
+    <button class="cta ghost" id="btn-retry">Retry This Seed</button>
+    <button class="cta ghost" id="btn-daily2">Daily Descent</button>
   </div>
 </div>
 
 <script>
 "use strict";
 /* ================================================================
-   ENGINE — line-for-line port of Assets/Scripts/Core (C#).
-   Keep in lockstep with Rules.cs; the seed-7 deck order is verified
-   against the C# engine in CI-style tests.
+   UNDERDECK — vertical slice per UNDERDECK_GDD.md
+   Scoundrel room loop + skill deck + relics + depths/bosses/shops.
    ================================================================ */
+
+/* ---------- deterministic RNG ---------- */
 const MASK = (1n << 64n) - 1n;
 function splitmix64(seed) {
   let s = BigInt(seed) & MASK;
@@ -418,204 +423,134 @@ function splitmix64(seed) {
     return (z ^ (z >> 31n)) & MASK;
   };
 }
-function createDungeon() {
-  const d = [];
-  for (let r = 2; r <= 14; r++) { d.push({ s: "♣", r }); d.push({ s: "♠", r }); }
-  for (let r = 2; r <= 10; r++) { d.push({ s: "♦", r }); d.push({ s: "♥", r }); }
-  return d;
-}
-function shuffle(a, seed) {
-  const next = splitmix64(seed);
-  shuffleWith(a, next);
-}
 function shuffleWith(a, next) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Number(next() % BigInt(i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
 }
-const kindOf = (c) => (c.s === "♦" ? "weapon" : c.s === "♥" ? "elixir" : "enemy");
-const RANKS = { 11: "J", 12: "Q", 13: "K", 14: "A" };
-const fmt = (c) => (RANKS[c.r] || c.r) + c.s;
+const rngInt = (next, n) => Number(next() % BigInt(n));
 
-function newGame(seed) {
-  const dungeon = createDungeon();
-  shuffle(dungeon, seed);
-  const G = {
-    status: "playing", hp: 20, maxHp: 20,
-    weapon: null, weaponLimit: null,
-    dungeon, room: [], discard: [],
-    elixirDrunk: false, fledLast: false, resolvedThisRoom: 0, lastResolved: null,
-  };
-  deal(G, false);
-  return G;
-}
-function deal(G, fled) {
-  while (G.room.length < 4 && G.dungeon.length > 0) G.room.push(G.dungeon.shift());
-  G.elixirDrunk = false;
-  G.fledLast = fled;
-  G.resolvedThisRoom = 0;
-  if (G.room.length === 0 && G.status === "playing") G.status = "won";
-}
-function canFlee(G) {
-  return G.status === "playing" && !G.fledLast && G.resolvedThisRoom === 0 && G.room.length > 0;
-}
-function canUseWeapon(G, c) {
-  return kindOf(c) === "enemy" && !!G.weapon && (G.weaponLimit === null || c.r <= G.weaponLimit);
-}
-function previewDamage(G, c, useWeapon) {
-  return useWeapon ? Math.max(0, c.r - G.weapon.r) : c.r;
-}
-function takeFromRoom(G, c) {
-  if (G.status !== "playing") throw new Error("run is over");
-  const i = G.room.findIndex((x) => x.s === c.s && x.r === c.r);
-  if (i < 0) throw new Error(fmt(c) + " is not in the room");
-  G.room.splice(i, 1);
-}
-function resolveCard(G, c) {
-  G.discard.push(c);
-  G.lastResolved = c;
-  G.resolvedThisRoom++;
-  if (G.hp <= 0) { G.status = "lost"; return; }
-  if (G.room.length === 0 && G.dungeon.length === 0) { G.status = "won"; return; }
-  if (G.room.length === 1 && G.dungeon.length > 0) deal(G, false); // resolve 3, carry 1
-}
-function fight(G, c, useWeapon) {
-  if (kindOf(c) !== "enemy") throw new Error("not an enemy");
-  if (useWeapon && !canUseWeapon(G, c)) throw new Error("weapon cannot strike " + fmt(c));
-  takeFromRoom(G, c);
-  const dmg = previewDamage(G, c, useWeapon);
-  if (useWeapon) G.weaponLimit = c.r; // degradation
-  G.hp = Math.max(0, G.hp - dmg);
-  resolveCard(G, c);
-  return dmg;
-}
-function equip(G, c) {
-  if (kindOf(c) !== "weapon") throw new Error("not a weapon");
-  takeFromRoom(G, c);
-  G.weapon = c;
-  G.weaponLimit = null;
-  resolveCard(G, c);
-}
-function drink(G, c) {
-  if (kindOf(c) !== "elixir") throw new Error("not an elixir");
-  takeFromRoom(G, c);
-  let healed = 0;
-  if (!G.elixirDrunk) {
-    healed = Math.min(G.maxHp - G.hp, c.r);
-    G.hp += healed;
-    G.elixirDrunk = true;
+/* ---------- content: monsters, weapons, relics, skills ---------- */
+const MONSTER = {
+  2: ["Rat", "🐀"], 3: ["Cave Bat", "🦇"], 4: ["Slime", "👾"], 5: ["Goblin", "👺"],
+  6: ["Skeleton", "💀"], 7: ["Bandit", "🥷"], 8: ["Dire Wolf", "🐺"], 9: ["Cultist", "🧙"],
+  10: ["Ogre", "👹"], 11: ["Wraith", "👻"], 12: ["Dark Knight", "🤺"], 13: ["Stone Golem", "🗿"],
+  14: ["Dragon", "🐉"],
+};
+const ELITES = {
+  armored: { name: "Armored", text: "your weapon counts as 2 less" },
+  brutal:  { name: "Brutal",  text: "deals 2 extra damage" },
+};
+const CURSES = {
+  blight: { name: "Blight",        art: "🕷️", text: "Take 3 damage." },
+  thief:  { name: "Thief's Curse", art: "🐍", text: "Lose 5 gold." },
+  rust:   { name: "Rustwind",      art: "🌫️", text: "Your blade dulls to its own power." },
+};
+const WEAPONS = {
+  dagger:  { name: "Rusty Dagger",     power: 3, art: "🔪", text: "A delver's first friend.", price: 0 },
+  rapier:  { name: "Duelist's Rapier", power: 5, art: "🗡️", text: "Doesn't dull when you take no damage.", price: 8 },
+  kris:    { name: "Kris of Thirst",   power: 4, art: "⚔️", text: "Heal 1 whenever it slays.", price: 10 },
+  whisper: { name: "Whisper Blade",    power: 6, art: "🌬️", text: "Ignores dulling against threat 4 or less.", price: 12 },
+  hammer:  { name: "Warhammer",        power: 9, art: "🔨", text: "Dulls two steps at a time.", price: 14 },
+};
+const RELICS = {
+  whetstone:   { name: "Whetstone",       art: "🪨", text: "Your blade never dulls below 4.", price: 10 },
+  emberheart:  { name: "Ember Heart",     art: "❤️‍🔥", text: "Potions also slay the strongest monster they can.", price: 12 },
+  boots:       { name: "Coward's Boots",  art: "👢", text: "You may flee twice in a row.", price: 9 },
+  glasssigil:  { name: "Glass Sigil",     art: "💎", text: "Gold gains doubled. Max health becomes 12.", price: 8 },
+  gravebind:   { name: "Gravebind",       art: "⛓️", text: "Every 5th slain monster returns as a Revenant skill.", price: 11 },
+  torchbearer: { name: "Torchbearer",     art: "🕯️", text: "The top card of the dungeon is always revealed.", price: 9 },
+  bloodpact:   { name: "Bloodpact",       art: "🩸", text: "Trade 2 health for 1 focus.", price: 10 },
+  phoenix:     { name: "Phoenix Feather", art: "🪶", text: "Once per run, survive death at 1 health.", price: 13 },
+};
+const SKILLS = {
+  strike:     { name: "Strike",        cost: 0, art: "⚔️", text: "+3 power on your next fight this room." },
+  guard:      { name: "Guard",         cost: 1, art: "🛡️", text: "Block the next 4 damage this room." },
+  scout:      { name: "Scout",         cost: 1, art: "👁️", text: "Peek the top 2 dungeon cards; you may swap them." },
+  slip:       { name: "Slip",          cost: 0, art: "💨", text: "This room you may flee, even after fleeing." },
+  bash:       { name: "Bash",          cost: 1, art: "💥", text: "Slay a monster of threat 6 or less." },
+  mend:       { name: "Mend",          cost: 1, art: "🌿", text: "Heal 3." },
+  pickpocket: { name: "Pickpocket",    cost: 0, art: "💰", text: "Gain 4 gold." },
+  preserve:   { name: "Preserve",      cost: 1, art: "🧿", text: "Your next weapon kill doesn't dull the blade." },
+  snipe:      { name: "Snipe",         cost: 1, art: "🏹", text: "Resolve one card; banish the rest of the room to the bottom." },
+  knifethrow: { name: "Knife Throw",   cost: 1, art: "🔪", text: "Fight a monster ignoring dullness; the weapon is lost." },
+  grit:       { name: "Grit",          cost: 1, art: "🐲", text: "+5 defense on your next fight this room." },
+  chalice:    { name: "Second Chalice",cost: 1, art: "✨", text: "You may drink a second potion this room." },
+  smokebomb:  { name: "Smoke Bomb",    cost: 2, art: "💣", text: "Swap two room cards with the top two of the dungeon." },
+  necromancy: { name: "Necromancy",    cost: 2, art: "🔮", text: "Unearth 6 discarded cards; claim one red." },
+  revenant:   { name: "Revenant",      cost: 1, art: "🦴", text: "Slay a monster of threat 8 or less." },
+};
+const STARTER_DECK = ["strike", "strike", "strike", "strike", "guard", "guard", "guard", "scout", "scout", "slip"];
+const DRAFT_POOL = ["bash", "mend", "pickpocket", "preserve", "snipe", "knifethrow", "grit", "chalice", "smokebomb", "necromancy", "strike", "guard"];
+const DEPTHS = [
+  { name: "The Cellars",       numeral: "I" },
+  { name: "The Flooded Vaults",numeral: "II" },
+  { name: "The Throat",        numeral: "III" },
+];
+const BOSSES = [
+  { name: "The Gaoler",     threat: 12, art: "⛓️", special: "lock",
+    text: "He locks one of your skills away for the fight." },
+  { name: "The Rot King",   threat: 13, art: "🧟", special: "twice",
+    text: "He must be struck down twice." },
+  { name: "The Deep Tyrant",threat: 15, art: "🐙", special: "pierce",
+    text: "He ignores 3 of your weapon's power." },
+];
+
+function buildDepthDeck(depth, seed) {
+  const next = splitmix64(seed);
+  const cards = [];
+  const mon = (r) => { cards.push({ kind: "monster", s: "♠", r }); cards.push({ kind: "monster", s: "♣", r }); };
+  if (depth === 1) {
+    for (let r = 2; r <= 8; r++) mon(r);                       // 14 monsters
+    for (let r = 2; r <= 6; r++) cards.push({ kind: "treasure", s: "♦", r });
+    cards.push({ kind: "cache", s: "♦", r: 11 });
+    for (let r = 2; r <= 6; r++) cards.push({ kind: "potion", s: "♥", r });
+  } else if (depth === 2) {
+    for (let r = 5; r <= 11; r++) mon(r);                      // 14 monsters
+    ["blight", "thief", "rust"].forEach((id) => cards.push({ kind: "curse", curse: id, r: 0 }));
+    for (let r = 4; r <= 8; r++) cards.push({ kind: "treasure", s: "♦", r });
+    cards.push({ kind: "cache", s: "♦", r: 12 });
+    for (let r = 4; r <= 8; r++) cards.push({ kind: "potion", s: "♥", r });
+  } else {
+    for (let r = 9; r <= 14; r++) mon(r);                      // 12 monsters
+    ["blight", "rust"].forEach((id) => cards.push({ kind: "curse", curse: id, r: 0 }));
+    for (let r = 6; r <= 10; r++) cards.push({ kind: "treasure", s: "♦", r });
+    cards.push({ kind: "cache", s: "♦", r: 13 });
+    for (let r = 7; r <= 10; r++) cards.push({ kind: "potion", s: "♥", r });
+    // three elites among the monsters
+    const monsters = cards.filter((c) => c.kind === "monster");
+    for (let i = 0; i < 3; i++) {
+      let m;
+      do { m = monsters[rngInt(next, monsters.length)]; } while (m.elite);
+      m.elite = rngInt(next, 2) === 0 ? "armored" : "brutal";
+    }
   }
-  resolveCard(G, c);
-  return healed;
-}
-function flee(G) {
-  if (!canFlee(G)) throw new Error("cannot flee");
-  G.dungeon.push(...G.room);
-  G.room.length = 0;
-  deal(G, true);
-}
-function score(G) {
-  if (G.status === "won") {
-    let s = G.hp;
-    if (G.hp === G.maxHp && G.lastResolved && kindOf(G.lastResolved) === "elixir")
-      s += G.lastResolved.r; // wasted-final-potion bonus
-    return s;
-  }
-  if (G.status === "lost") {
-    let menace = 0;
-    for (const c of G.dungeon) if (kindOf(c) === "enemy") menace += c.r;
-    for (const c of G.room) if (kindOf(c) === "enemy") menace += c.r;
-    return -menace;
-  }
-  throw new Error("run in progress");
+  shuffleWith(cards, next);
+  return cards;
 }
 
-/* ================================================================
-   RUN LAYER — Descend or Retreat (GAME_PLAN §3.5 #1).
-   ================================================================ */
-function multFor(floor) { return floor === 1 ? 1 : floor === 2 ? 1.5 : floor === 3 ? 2 : floor - 1; }
-function floorSeed(base, floor) {
-  if (floor === 1) return BigInt(base); // floor 1 stays parity-identical to the C# engine
-  const next = splitmix64(BigInt(base));
-  let v = 0n;
-  for (let i = 1; i < floor; i++) v = next();
-  return v;
-}
-const SALVAGE = 0.2; // fraction of the unbanked hoard kept on death
-
-/* ================================================================
-   CLASS LAYER — the Red Court (GAME_PLAN §3.1).
-   The eight removed red cards are character classes; two jokers per
-   run are ability charges. Layered over the untouched engine.
-   ================================================================ */
-const CLASSES = {
-  hunter: {
-    card: "J♦", name: "The Hunter", ability: "Snipe", art: "🏹",
-    blurb: "Resolve one card, banish the rest of the room to the bottom. Not a retreat.",
-  },
-  thief: {
-    card: "Q♦", name: "The Thief", ability: "Knife Throw", art: "🔪",
-    blurb: "Fight any monster with your weapon as if it were sharp — then lose the weapon.",
-  },
-  warrior: {
-    card: "K♦", name: "The Warrior", ability: "Flawless Blow", art: "⚔️",
-    blurb: "Kill with your weapon without dulling it.",
-  },
-  mage: {
-    card: "J♥", name: "The Mage", ability: "Necromancy", art: "🔮",
-    blurb: "Shuffle the discard, draw 6, use one red card among them.",
-  },
-  priestess: {
-    card: "Q♥", name: "The Priestess", ability: "Healing Magic", art: "✨",
-    blurb: "Drink a second elixir in a room.",
-  },
-  dragonslayer: {
-    card: "K♥", name: "The Dragonslayer", ability: "Grit", art: "🐲",
-    blurb: "+5 defense on one fight, armed or bare-handed.",
-  },
-  drifter: {
-    card: "A♦", name: "The Drifter", ability: "Smoke Bomb", art: "💨",
-    blurb: "Draw 2 cards and swap them into the room; the pair you swap out goes to the bottom.",
-  },
-  phoenix: {
-    card: "A♥", name: "The Phoenix", ability: "Rebirth", art: "🔥",
-    blurb: "On reaching 0 health, survive at 1. Automatic.",
-  },
-};
-const MAX_CHARGES = 2; // the two jokers
-
-/* ================================================================
-   FLAVOR — names and art per rank band (GAME_PLAN §3.2)
-   ================================================================ */
-const ENEMY_NAMES = {
-  2: "Rat", 3: "Cave Bat", 4: "Slime", 5: "Goblin", 6: "Skeleton", 7: "Bandit",
-  8: "Dire Wolf", 9: "Cultist", 10: "Ogre", 11: "Wraith", 12: "Dark Knight",
-  13: "Stone Golem", 14: "Dragon Lord",
-};
-const WEAPON_NAMES = {
-  2: "Rusty Knife", 3: "Dagger", 4: "Cudgel", 5: "Shortsword", 6: "Mace",
-  7: "Longsword", 8: "War Axe", 9: "Greatsword", 10: "Dragonblade",
-};
-const ENEMY_ART = {
-  2: "🐀", 3: "🦇", 4: "👾", 5: "👺", 6: "💀", 7: "🥷", 8: "🐺",
-  9: "🧙", 10: "👹", 11: "👻", 12: "🤺", 13: "🗿", 14: "🐉",
-};
-const WEAPON_ART = { 2: "🔪", 3: "🗡️", 4: "🪵", 5: "🗡️", 6: "🔨", 7: "⚔️", 8: "🪓", 9: "⚔️", 10: "🔱" };
-const elixirName = (r) => (r <= 4 ? "Weak Elixir" : r <= 7 ? "Elixir" : "Greater Elixir");
-const elixirArt = (r) => (r <= 4 ? "🧪" : r <= 7 ? "⚗️" : "🏺");
 const cardName = (c) =>
-  kindOf(c) === "enemy" ? ENEMY_NAMES[c.r] : kindOf(c) === "weapon" ? WEAPON_NAMES[c.r] : elixirName(c.r);
+  c.kind === "monster" ? (c.elite ? ELITES[c.elite].name + " " : "") + MONSTER[c.r][0]
+  : c.kind === "potion" ? (c.r <= 4 ? "Weak Potion" : c.r <= 7 ? "Potion" : "Greater Potion")
+  : c.kind === "treasure" ? "Treasure"
+  : c.kind === "cache" ? "Loot Cache"
+  : CURSES[c.curse].name;
 const cardArt = (c) =>
-  kindOf(c) === "enemy" ? ENEMY_ART[c.r] : kindOf(c) === "weapon" ? WEAPON_ART[c.r] : elixirArt(c.r);
+  c.kind === "monster" ? MONSTER[c.r][1]
+  : c.kind === "potion" ? (c.r <= 4 ? "🧪" : c.r <= 7 ? "⚗️" : "🏺")
+  : c.kind === "treasure" ? "🪙"
+  : c.kind === "cache" ? "🎁"
+  : CURSES[c.curse].art;
+const kindBadge = { monster: "☠", potion: "♥", treasure: "◆", cache: "◆", curse: "✦" };
+const cid = (c) => (c.kind === "curse" ? "curse-" + c.curse : c.kind + "-" + c.s + c.r + (c.elite || ""));
 
 /* ================================================================
-   SOUND — synthesized with WebAudio, no assets. Mute persists.
+   SOUND — synthesized, no assets
    ================================================================ */
 const SFX = (() => {
-  let ctx = null;
-  let muted = false;
-  try { muted = localStorage.getItem("scroundel.muted") === "1"; } catch (e) {}
+  let ctx = null, muted = false;
+  try { muted = localStorage.getItem("underdeck.muted") === "1"; } catch (e) {}
   function ac() {
     if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === "suspended") ctx.resume();
@@ -624,8 +559,7 @@ const SFX = (() => {
   function tone(freq, dur, type, vol, slide) {
     if (muted) return;
     try {
-      const c = ac();
-      const o = c.createOscillator(), g = c.createGain();
+      const c = ac(), o = c.createOscillator(), g = c.createGain();
       o.type = type || "triangle";
       o.frequency.setValueAtTime(freq, c.currentTime);
       if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), c.currentTime + dur);
@@ -638,14 +572,12 @@ const SFX = (() => {
   function noise(dur, vol, cutoff) {
     if (muted) return;
     try {
-      const c = ac();
-      const src = c.createBufferSource();
+      const c = ac(), src = c.createBufferSource();
       const buf = c.createBuffer(1, c.sampleRate * dur, c.sampleRate);
-      const data = buf.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
       src.buffer = buf;
-      const f = c.createBiquadFilter();
-      f.type = "lowpass"; f.frequency.value = cutoff;
+      const f = c.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = cutoff;
       const g = c.createGain();
       g.gain.setValueAtTime(vol, c.currentTime);
       g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
@@ -654,318 +586,377 @@ const SFX = (() => {
     } catch (e) {}
   }
   return {
-    tap:    () => tone(220, 0.06, "sine", 0.05),
-    slash:  () => { noise(0.12, 0.16, 3200); tone(660, 0.09, "square", 0.04, -300); },
-    thud:   () => { noise(0.16, 0.24, 320); tone(90, 0.13, "sine", 0.2, -40); },
-    heal:   () => { tone(523, 0.12, "sine", 0.1); setTimeout(() => tone(784, 0.16, "sine", 0.1), 90); },
-    equip:  () => { tone(392, 0.07, "triangle", 0.12); setTimeout(() => tone(587, 0.09, "triangle", 0.12), 60); },
+    tap: () => tone(220, 0.06, "sine", 0.05),
+    slash: () => { noise(0.12, 0.16, 3200); tone(660, 0.09, "square", 0.04, -300); },
+    thud: () => { noise(0.16, 0.24, 320); tone(90, 0.13, "sine", 0.2, -40); },
+    heal: () => { tone(523, 0.12, "sine", 0.1); setTimeout(() => tone(784, 0.16, "sine", 0.1), 90); },
+    equip: () => { tone(392, 0.07, "triangle", 0.12); setTimeout(() => tone(587, 0.09, "triangle", 0.12), 60); },
     whoosh: () => noise(0.26, 0.12, 900),
-    coin:   () => { tone(988, 0.07, "square", 0.05); setTimeout(() => tone(1319, 0.13, "square", 0.05), 70); },
-    magic:  () => { tone(440, 0.1, "sine", 0.08); setTimeout(() => tone(659, 0.1, "sine", 0.08), 80); setTimeout(() => tone(880, 0.18, "sine", 0.08), 160); },
-    death:  () => { tone(170, 0.7, "sawtooth", 0.12, -110); noise(0.5, 0.14, 400); },
-    toggle: () => {
-      muted = !muted;
-      try { localStorage.setItem("scroundel.muted", muted ? "1" : "0"); } catch (e) {}
-      return muted;
-    },
+    coin: () => { tone(988, 0.07, "square", 0.05); setTimeout(() => tone(1319, 0.13, "square", 0.05), 70); },
+    magic: () => { tone(440, 0.1, "sine", 0.08); setTimeout(() => tone(659, 0.1, "sine", 0.08), 80); setTimeout(() => tone(880, 0.18, "sine", 0.08), 160); },
+    curse: () => { tone(310, 0.25, "sawtooth", 0.07, -120); },
+    boss: () => { tone(110, 0.5, "sawtooth", 0.13, -30); noise(0.4, 0.1, 250); },
+    death: () => { tone(170, 0.7, "sawtooth", 0.12, -110); noise(0.5, 0.14, 400); },
+    toggle: () => { muted = !muted; try { localStorage.setItem("underdeck.muted", muted ? "1" : "0"); } catch (e) {} return muted; },
     muted: () => muted,
   };
 })();
 
 /* ================================================================
-   UI
+   RUN STATE
    ================================================================ */
-let g = null;
-let run = null; // { baseSeed, floor, unbanked, lastEarned, classId, charges, rngNext }
-let seedStr = null;
-let lastClassId = null;
-let prevIds = new Set();
-let mode = null; // null | "snipe" | "drift"
-let driftDrawn = null, driftPicks = [];
-let pendingSeed = null; // seed waiting on class selection
+let S = null;
+let mode = null; // null | {type:'bash'|'revenant'|'knife'|'snipe'} | {type:'smoke', drawn, picks}
 const $ = (q) => document.querySelector(q);
-const cid = (c) => c.r + c.s;
-const same = (a, b) => a.s === b.s && a.r === b.r;
-
 function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
-function bests() {
-  try {
-    return {
-      hoard: Number(localStorage.getItem("scroundel.bestHoard")) || null,
-      floor: Number(localStorage.getItem("scroundel.bestFloor")) || null,
-    };
-  } catch (e) { return { hoard: null, floor: null }; }
-}
-function saveBests(hoard, floor) {
-  let newHoard = false;
-  try {
-    const b = bests();
-    if (b.hoard === null || hoard > b.hoard) { localStorage.setItem("scroundel.bestHoard", String(hoard)); newHoard = true; }
-    if (b.floor === null || floor > b.floor) localStorage.setItem("scroundel.bestFloor", String(floor));
-  } catch (e) {}
-  return newHoard;
-}
-
-function startRun(seed, classId) {
-  seedStr = String(seed);
-  lastClassId = classId || null;
-  run = {
-    baseSeed: seedStr, floor: 1, unbanked: 0, lastEarned: 0,
-    classId: classId || null,
-    charges: classId ? MAX_CHARGES : 0,
-    rngNext: splitmix64(BigInt(seedStr) ^ 0xABC0FFEEn), // ability RNG stream, deterministic per run
+function newRun(seed) {
+  const base = String(seed);
+  S = {
+    seed: base,
+    rng: splitmix64(BigInt(base) ^ 0xC0FFEEn),
+    depth: 1, phase: "room", roomNo: 0,
+    hp: 20, maxHp: 20, gold: 0,
+    weapon: Object.assign({ id: "dagger" }, WEAPONS.dagger), weaponLimit: null,
+    relics: [], phoenixUsed: false,
+    deck: buildDepthDeck(1, BigInt(base)),
+    room: [], discard: [],
+    skills: { draw: STARTER_DECK.slice(), disc: [], hand: [] },
+    focus: 2, potionDrunk: false, secondPotion: false, fledLast: false, actedThisRoom: 0,
+    strikeNext: 0, gritNext: 0, block: 0, preserveNext: false,
+    slain: 0, graveTick: 0, bossesSlain: 0, removals: 0,
+    boss: null,
   };
-  g = newGame(floorSeed(seedStr, 1));
-  prevIds = new Set();
-  mode = null; driftDrawn = null; driftPicks = [];
-  $("#start").classList.remove("open");
-  $("#end").classList.remove("open");
-  $("#floorclear").classList.remove("open");
-  $("#classpick").classList.remove("open");
-  closeSheet();
-  render();
+  shuffleWith(S.skills.draw, S.rng);
+  mode = null;
+  dealRoom(false);
 }
+function hasRelic(id) { return S.relics.includes(id); }
+function goldGain(n) { S.gold += hasRelic("glasssigil") ? n * 2 : n; }
 
-function descend() {
-  run.floor++;
-  const hp = g.hp, weapon = g.weapon, limit = g.weaponLimit;
-  g = newGame(floorSeed(run.baseSeed, run.floor));
-  g.hp = hp; g.weapon = weapon; g.weaponLimit = limit;
-  prevIds = new Set();
-  mode = null; driftDrawn = null; driftPicks = [];
-  $("#floorclear").classList.remove("open");
-  SFX.whoosh();
-  render();
-}
-
-function randomSeed() { return String(Math.floor(Math.random() * 9007199254740991)); }
-function dailySeed() {
-  const d = new Date();
-  return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
-}
-function dailyLabel() {
-  return new Date().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-}
-
-function render() {
-  // top bar
-  $("#floor-chip").textContent = "Floor " + run.floor + (run.floor > 1 ? " · pays ×" + multFor(run.floor) : "");
-  $("#gold-count").textContent = run.unbanked;
-
-  // hero tableau
-  $("#hero-art").textContent = run.classId ? CLASSES[run.classId].art : "🛡️";
-  $("#hp-num").textContent = g.hp + " / " + g.maxHp;
-  const fill = $("#hp-fill");
-  fill.style.width = (100 * g.hp / g.maxHp) + "%";
-  fill.classList.toggle("high", g.hp > 7);
-  $("#deck-count").textContent = g.dungeon.length;
-  if (g.weapon) {
-    $("#weapon-art").textContent = cardArt(g.weapon);
-    $("#weapon-name").textContent = cardName(g.weapon);
-    $("#weapon-info").innerHTML = g.weaponLimit !== null
-      ? g.weapon.r + ' <span class="limit">· ≤ ' + g.weaponLimit + "</span>"
-      : g.weapon.r + " · fresh";
-  } else {
-    $("#weapon-art").textContent = "✊";
-    $("#weapon-name").textContent = "Unarmed";
-    $("#weapon-info").textContent = "—";
+function drawHand() {
+  S.skills.disc.push(...S.skills.hand);
+  S.skills.hand = [];
+  for (let i = 0; i < 3; i++) {
+    if (S.skills.draw.length === 0) {
+      S.skills.draw = S.skills.disc; S.skills.disc = [];
+      shuffleWith(S.skills.draw, S.rng);
+    }
+    if (S.skills.draw.length) S.skills.hand.push(S.skills.draw.shift());
   }
+  S.focus = 2;
+  S.lockedIdx = -1;
+}
+function dealRoom(fled) {
+  while (S.room.length < 4 && S.deck.length > 0) S.room.push(S.deck.shift());
+  S.fledLast = fled;
+  S.slipActive = false;
+  S.snipePending = false;
+  S.actedThisRoom = 0;
+  S.potionDrunk = false; S.secondPotion = false;
+  S.strikeNext = 0; S.gritNext = 0; S.block = 0; S.preserveNext = false;
+  S.roomNo++;
+  drawHand();
+}
+function canFleeNow() {
+  return S.phase === "room" && S.room.length > 0 && S.actedThisRoom === 0 &&
+    (!S.fledLast || hasRelic("boots") || S.slipActive);
+}
 
-  // room
+/* ---------- combat ---------- */
+function effLimit() {
+  if (S.weaponLimit === null) return Infinity;
+  return hasRelic("whetstone") ? Math.max(S.weaponLimit, 5) : S.weaponLimit;
+}
+function canUseWeapon(c) {
+  if (!S.weapon || c.kind !== "monster") return false;
+  if (S.weapon.id === "whisper" && c.r <= 4) return true;
+  return c.r < effLimit(); // GDD: strictly lower
+}
+function threatOf(c) { return c.r + (c.elite === "brutal" ? 2 : 0); }
+function previewFight(c, useWeapon, opts) {
+  opts = opts || {};
+  let power = 0;
+  if (useWeapon && S.weapon) {
+    power = S.weapon.power;
+    if (c.elite === "armored") power -= 2;
+    if (S.phase === "boss" && S.boss.special === "pierce") power -= 3;
+  }
+  power += S.strikeNext;
+  let dmg = Math.max(0, threatOf(c) - Math.max(0, power) - S.gritNext);
+  const blocked = Math.min(S.block, dmg);
+  return { dmg: dmg - blocked, blocked };
+}
+function loseHp(n) {
+  S.hp = Math.max(0, S.hp - n);
+  if (S.hp === 0 && hasRelic("phoenix") && !S.phoenixUsed) {
+    S.phoenixUsed = true;
+    S.hp = 1;
+    return "phoenix";
+  }
+  return S.hp === 0 ? "dead" : "ok";
+}
+function onSlain(c, weaponUsed) {
+  S.slain++;
+  goldGain(1);
+  if (weaponUsed && S.weapon && S.weapon.id === "kris") S.hp = Math.min(S.maxHp, S.hp + 1);
+  if (hasRelic("gravebind")) {
+    S.graveTick++;
+    if (S.graveTick >= 5) { S.graveTick = 0; S.skills.disc.push("revenant"); }
+  }
+}
+function applyDull(c, opts) {
+  opts = opts || {};
+  if (!S.weapon || opts.noDull) return;
+  if (S.weapon.id === "whisper" && c.r <= 4) return;
+  if (S.weapon.id === "rapier" && opts.tookNoDamage) return;
+  if (S.preserveNext) { S.preserveNext = false; return; }
+  let dullTo = S.weapon.id === "hammer" ? c.r - 2 : c.r;
+  S.weaponLimit = S.weaponLimit === null ? dullTo : Math.min(S.weaponLimit, dullTo);
+}
+function fightMonster(c, useWeapon, opts) {
+  opts = opts || {};
+  const pv = previewFight(c, useWeapon);
+  S.block -= pv.blocked;
+  S.strikeNext = 0; S.gritNext = 0;
+  const outcome = loseHp(pv.dmg);
+  if (useWeapon) applyDull(c, { noDull: opts.noDull, tookNoDamage: pv.dmg === 0 });
+  if (opts.loseWeapon) { S.weapon = null; S.weaponLimit = null; }
+  onSlain(c, useWeapon);
+  return { dmg: pv.dmg, outcome };
+}
+
+/* ---------- room card resolution ---------- */
+function removeFromRoom(c) {
+  const i = S.room.findIndex((x) => cid(x) === cid(c));
+  if (i < 0) throw new Error("not in room");
+  S.room.splice(i, 1);
+  S.discard.push(c);
+  S.actedThisRoom++;
+}
+function afterResolve() {
+  if (S.hp === 0) return endRun(false);
+  if (S.room.length === 1 && S.deck.length > 0) { dealRoom(false); return; }
+  if (S.room.length === 0 && S.deck.length === 0) startBoss();
+}
+
+/* ---------- boss ---------- */
+function startBoss() {
+  S.phase = "bossintro";
+  const b = BOSSES[S.depth - 1];
+  S.boss = { name: b.name, threat: b.threat, art: b.art, special: b.special, text: b.text, hitsLeft: b.special === "twice" ? 2 : 1 };
+  SFX.boss();
+  showInterstitial({
+    eyebrow: "the depth stirs", art: b.art, title: b.name.toUpperCase(),
+    text: b.text + " Threat " + b.threat + ".",
+    btn: "Face Him",
+    onGo: () => {
+      S.phase = "boss";
+      drawHand();
+      if (S.boss.special === "lock" && S.skills.hand.length) S.lockedIdx = rngInt(S.rng, S.skills.hand.length);
+      S.strikeNext = 0; S.gritNext = 0; S.block = 0;
+      render();
+    },
+  });
+}
+function fightBoss(useWeapon) {
+  const c = { kind: "monster", s: "♠", r: S.boss.threat };
+  const pv = previewFight(c, useWeapon);
+  S.block -= pv.blocked;
+  S.strikeNext = 0; S.gritNext = 0;
+  const outcome = loseHp(pv.dmg);
+  if (useWeapon) applyDull(c, { tookNoDamage: pv.dmg === 0 });
+  if (outcome === "dead") return { dmg: pv.dmg, outcome };
+  S.boss.hitsLeft--;
+  if (S.boss.hitsLeft <= 0) {
+    S.bossesSlain++;
+    goldGain(8);
+    S.slain++;
+    return { dmg: pv.dmg, outcome: "slain" };
+  }
+  return { dmg: pv.dmg, outcome: "again" };
+}
+function bossDefeated() {
+  if (S.depth >= 3) return endRun(true);
+  showRelicDraft(() => showShop(() => {
+    S.depth++;
+    S.deck = buildDepthDeck(S.depth, BigInt(S.seed) + BigInt(S.depth * 7919));
+    S.phase = "room"; S.boss = null; S.room = [];
+    dealRoom(false);
+    render();
+  }));
+}
+
+/* ---------- scoring / end ---------- */
+function scoreParts() {
+  return {
+    hp: S.hp * 10, gold: S.gold, depth: S.depth * 100, boss: S.bossesSlain * 50,
+    total: S.hp * 10 + S.gold + S.depth * 100 + S.bossesSlain * 50,
+  };
+}
+function bestsGet() {
+  try { return { score: Number(localStorage.getItem("underdeck.best")) || null, depth: Number(localStorage.getItem("underdeck.bestDepth")) || null }; }
+  catch (e) { return { score: null, depth: null }; }
+}
+function endRun(won) {
+  if (S.phase === "over") return;
+  S.phase = "over";
+  const sc = scoreParts();
+  let isBest = false;
+  try {
+    const b = bestsGet();
+    if (b.score === null || sc.total > b.score) { localStorage.setItem("underdeck.best", String(sc.total)); isBest = true; }
+    if (b.depth === null || S.depth > b.depth) localStorage.setItem("underdeck.bestDepth", String(S.depth));
+  } catch (e) {}
+  $("#end-eyebrow").textContent = won ? "the deep tyrant falls" : "the dungeon shuffles you under";
+  $("#end-art").textContent = won ? "🏆" : "☠️";
+  const v = $("#end-verdict");
+  v.textContent = won ? "ESCAPED" : "SLAIN";
+  v.className = "verdict " + (won ? "good" : "bad");
+  $("#end-epitaph").textContent = won
+    ? "Three depths conquered. The Underdeck spits you back into daylight."
+    : "Depth " + DEPTHS[S.depth - 1].numeral + " — " + DEPTHS[S.depth - 1].name + " keeps your bones.";
+  $("#end-score").innerHTML =
+    "<span>health ×10 &nbsp;·&nbsp; " + sc.hp + "</span>" +
+    "<span>gold &nbsp;·&nbsp; " + sc.gold + "</span>" +
+    "<span>depth ×100 &nbsp;·&nbsp; " + sc.depth + "</span>" +
+    "<span>bosses ×50 &nbsp;·&nbsp; " + sc.boss + "</span>" +
+    '<span class="total">score ' + sc.total + "</span>";
+  const b = bestsGet();
+  $("#end-best").textContent = isBest ? "new best score" : b.score !== null ? "best " + b.score : "";
+  if (!won) SFX.death(); else SFX.coin();
+  setTimeout(() => { closeSheet(); $("#end").classList.add("open"); }, 650);
+}
+
+/* ================================================================
+   RENDER
+   ================================================================ */
+function hexCardHTML(c) {
+  const kb = kindBadge[c.kind];
+  const valBadge = c.kind === "curse" ? "" : '<span class="badge val">' + (c.kind === "cache" ? "?" : c.r) + "</span>";
+  return (
+    '<span class="frame hexclip"><span class="fill hexclip"><span class="art" aria-hidden="true">' + cardArt(c) + "</span></span></span>" +
+    valBadge +
+    '<span class="badge kind">' + kb + "</span>" +
+    '<span class="hexname">' + cardName(c) + "</span>"
+  );
+}
+function render() {
+  if (!S) return;
+  const d = DEPTHS[S.depth - 1];
+  $("#depth-label").textContent = "DEPTH " + d.numeral + " · " + d.name;
+  $("#deck-count").textContent = S.phase === "boss" ? "☠" : S.deck.length;
+  $("#deck-name").textContent = S.phase === "boss" ? "DEPTH BOSS" : "DUNGEON DECK";
+  $("#room-label").textContent = S.phase === "boss" ? S.boss.name.toUpperCase() : "ROOM " + S.roomNo;
+  $("#peek-chip").textContent =
+    hasRelic("torchbearer") && S.deck.length && S.phase === "room"
+      ? "next: " + cardArt(S.deck[0]) + " " + (S.deck[0].kind === "curse" ? cardName(S.deck[0]) : S.deck[0].r)
+      : "";
+
+  // room / boss
   const room = $("#room");
   room.innerHTML = "";
-  const newIds = new Set(g.room.map(cid));
-  g.room.forEach((c, i) => {
-    const k = kindOf(c);
+  if (S.phase === "boss") {
     const b = document.createElement("button");
-    b.className = "card " + k
-      + (k === "enemy" && c.r === 14 ? " boss" : "")
-      + (prevIds.has(cid(c)) ? "" : " enter")
-      + (driftPicks.some((p) => same(p, c)) ? " selected" : "");
-    b.style.animationDelay = (i * 0.06) + "s";
-    b.dataset.cid = cid(c);
-    b.setAttribute("aria-label", cardName(c) + ", value " + c.r);
+    b.className = "cardhex boss monster enter";
+    b.dataset.cid = "boss";
     b.innerHTML =
-      '<span class="suit" aria-hidden="true">' + c.s + "</span>" +
-      '<span class="val">' + c.r + "</span>" +
-      '<span class="art" aria-hidden="true">' + cardArt(c) + "</span>" +
-      '<span class="num">' + c.r + "</span>" +
-      '<span class="name">' + cardName(c) + "</span>";
-    b.addEventListener("click", () => {
-      if (mode === "drift") { toggleDriftPick(c, b); return; }
-      openSheet(c);
-    });
+      '<span class="frame hexclip"><span class="fill hexclip"><span class="art" aria-hidden="true">' + S.boss.art + "</span></span></span>" +
+      '<span class="badge val">' + S.boss.threat + "</span>" +
+      '<span class="badge kind">☠</span>' +
+      '<span class="hexname">' + S.boss.name + (S.boss.hitsLeft > 1 ? " · " + S.boss.hitsLeft + " lives" : "") + "</span>";
+    b.addEventListener("click", () => openBossSheet());
     room.appendChild(b);
-  });
-  prevIds = newIds;
-
-  renderAbilityBar();
-
-  // flee
-  const fleeBtn = $("#flee");
-  const note = $("#flee-note");
-  fleeBtn.disabled = !canFlee(g) || mode !== null;
-  note.textContent =
-    g.status !== "playing" ? "" :
-    mode === "snipe" ? "Snipe armed — choose your single target." :
-    mode === "drift" ? "Smoke fills the room — swap out two cards." :
-    g.fledLast ? "You fled the last room — stand and fight this one." :
-    g.resolvedThisRoom > 0 ? "You have already acted — no escape now." :
-    "Send all four cards to the bottom of the dungeon.";
-}
-
-/* ---------- class ability bar ---------- */
-function abilityUsable() {
-  if (!run.classId || run.charges <= 0 || g.status !== "playing") return false;
-  switch (run.classId) {
-    case "hunter": return g.room.length > 1;
-    case "drifter": return g.dungeon.length >= 2 && g.room.length >= 2;
-    case "mage": return g.discard.length > 0;
-    default: return true;
-  }
-}
-const BAR_CLASSES = { hunter: 1, drifter: 1, mage: 1 }; // triggered from the bar
-function renderAbilityBar() {
-  const bar = $("#ability-bar");
-  if (!run || !run.classId) { bar.hidden = true; return; }
-  bar.hidden = false;
-  const cls = CLASSES[run.classId];
-  $("#ability-pips").innerHTML =
-    "🃏".repeat(run.charges) + '<span class="spent">' + "🃏".repeat(MAX_CHARGES - run.charges) + "</span>";
-  let label = cls.ability, hint = "", actionable = false, armed = false;
-  if (mode === "snipe") {
-    label = "Snipe armed"; hint = "tap a card to resolve it · tap here to cancel";
-    actionable = true; armed = true;
-  } else if (mode === "drift") {
-    label = driftPicks.length === 2 ? "Confirm the swap" : "Swapping in: " + driftDrawn.map((x) => cardArt(x) + " " + x.r).join("  ");
-    hint = driftPicks.length === 2 ? "tap here to finish" : "pick " + (2 - driftPicks.length) + " room card" + (driftPicks.length === 1 ? "" : "s") + " to banish";
-    actionable = true; armed = true;
   } else {
-    switch (run.classId) {
-      case "hunter":       hint = "resolve one card, banish the rest of the room"; actionable = abilityUsable(); break;
-      case "drifter":      hint = "draw 2 from the dungeon, swap out 2 room cards"; actionable = abilityUsable(); break;
-      case "mage":         hint = "raise a red card from the discard pile"; actionable = abilityUsable(); break;
-      case "thief":        hint = "knife throw — offered when you fight"; break;
-      case "warrior":      hint = "flawless blow — offered when you strike"; break;
-      case "priestess":    hint = "healing magic — offered on a room's second elixir"; break;
-      case "dragonslayer": hint = "grit — offered when you fight"; break;
-      case "phoenix":      hint = "rebirth — automatic at 0 health"; break;
+    S.room.forEach((c, i) => {
+      const b = document.createElement("button");
+      b.className = "cardhex " + c.kind + (c.elite ? " elite" : "") + " enter" +
+        (mode && mode.type === "smoke" && mode.picks.some((p) => cid(p) === cid(c)) ? " selected" : "");
+      b.style.animationDelay = (i * 0.05) + "s";
+      b.dataset.cid = cid(c);
+      b.setAttribute("aria-label", cardName(c));
+      b.innerHTML = hexCardHTML(c);
+      b.addEventListener("click", () => onRoomTap(c, b));
+      room.appendChild(b);
+    });
+    for (let i = S.room.length; i < 4; i++) {
+      const s = document.createElement("div");
+      s.className = "cardhex";
+      s.innerHTML = '<span class="hexslot"></span>';
+      room.appendChild(s);
     }
-    label = cls.name + " · " + cls.ability;
   }
-  $("#ability-label").textContent = label;
-  $("#ability-hint").textContent = hint;
-  bar.classList.toggle("armed", armed);
-  bar.classList.toggle("unavail", !!BAR_CLASSES[run.classId] && !actionable && mode === null);
-  bar.disabled = !actionable;
-}
-$("#ability-bar").addEventListener("click", () => {
-  if (!run || !run.classId) return;
-  if (mode === "snipe") { mode = null; render(); return; }
-  if (mode === "drift") { if (driftPicks.length === 2) executeDrift(); return; }
-  if (!abilityUsable()) return;
-  SFX.tap();
-  if (run.classId === "hunter") { mode = "snipe"; render(); }
-  else if (run.classId === "drifter") startDrift();
-  else if (run.classId === "mage") castNecromancy();
-});
 
-/* Hunter — executed inside act() when mode === "snipe" */
-
-/* Drifter */
-function startDrift() {
-  run.charges--;
-  mode = "drift";
-  driftDrawn = g.dungeon.splice(0, 2);
-  driftPicks = [];
-  SFX.whoosh();
-  render();
-}
-function toggleDriftPick(c, el) {
-  const i = driftPicks.findIndex((p) => same(p, c));
-  if (i >= 0) { driftPicks.splice(i, 1); el.classList.remove("selected"); }
-  else if (driftPicks.length < 2) { driftPicks.push(c); el.classList.add("selected"); }
-  renderAbilityBar();
-}
-function executeDrift() {
-  driftPicks.forEach((pick, i) => {
-    const idx = g.room.findIndex((x) => same(x, pick));
-    g.dungeon.push(g.room[idx]);
-    g.room[idx] = driftDrawn[i];
-  });
-  driftDrawn = null; driftPicks = []; mode = null;
-  SFX.whoosh();
-  floatText("swapped", "gold");
-  render();
-}
-
-/* Mage */
-function castNecromancy() {
-  run.charges--;
-  SFX.magic();
-  const pool = g.discard.filter((c) => !(g.weapon && same(c, g.weapon))); // the held weapon isn't in the pile
-  const arr = pool.slice();
-  shuffleWith(arr, run.rngNext);
-  showMageSheet(arr.slice(0, 6));
-  render();
-}
-function showMageSheet(six) {
-  const sheet = $("#sheet");
-  sheet.innerHTML = "";
-  const h = document.createElement("h3");
-  h.innerHTML = '<span class="h-art" aria-hidden="true">🔮</span>Necromancy <span class="dim">— choose a red card</span>';
-  sheet.appendChild(h);
-  let anyRed = false;
-  six.forEach((c) => {
-    const k = kindOf(c);
-    if (k === "weapon") {
-      anyRed = true;
-      sheet.appendChild(sheetOption({
-        title: "Raise the " + cardName(c) + " (" + c.r + "♦)",
-        sub: g.weapon ? "replaces the " + cardName(g.weapon) + " (" + g.weapon.r + ") · fresh edge" : "a blade returns to your hand",
-        classAct: true,
-        onPick: () => {
-          g.weapon = c; g.weaponLimit = null;
-          closeSheet(); SFX.equip(); floatText("armed", "steel"); render();
-        },
-      }));
-    } else if (k === "elixir") {
-      anyRed = true;
-      const healed = g.elixirDrunk ? 0 : Math.min(g.maxHp - g.hp, c.r);
-      sheet.appendChild(sheetOption({
-        title: "Raise the " + cardName(c) + " (" + c.r + "♥)",
-        sub: g.elixirDrunk ? "no effect — you already drank in this room"
-           : healed === 0 ? "no effect — your health is already full"
-           : "restore " + healed + " health",
-        classAct: true,
-        onPick: () => {
-          let n = 0;
-          if (!g.elixirDrunk) { n = Math.min(g.maxHp - g.hp, c.r); g.hp += n; g.elixirDrunk = true; }
-          closeSheet(); SFX.heal(); healPulse();
-          floatText(n > 0 ? "+" + n : "wasted", "verd"); render();
-        },
-      }));
-    } else {
-      sheet.appendChild(sheetOption({
-        title: cardName(c) + " (" + fmt(c) + ")",
-        sub: "the dead offer no aid",
-        disabled: true,
-      }));
-    }
-  });
-  if (!anyRed) {
-    sheet.appendChild(sheetOption({ title: "Only monsters answered", sub: "the joker is spent — nothing happens", disabled: true }));
+  // hero row
+  const wk = $("#weapon-kit");
+  if (S.weapon) {
+    wk.className = "kit";
+    wk.innerHTML =
+      '<span class="frame hexclip"><span class="fill hexclip"><span class="art">' + S.weapon.art + "</span></span></span>" +
+      '<span class="badge small val">' + S.weapon.power + "</span>" +
+      '<span class="kitline">' + S.weapon.name.split(" ").pop() +
+      (S.weaponLimit !== null ? ' <span class="limit">&lt; ' + effLimit() + "</span>" : " · keen") + "</span>";
+  } else {
+    wk.className = "kit empty";
+    wk.innerHTML = '<span class="frame slot"></span><span class="kitline">unarmed</span>';
   }
-  const cancel = document.createElement("button");
-  cancel.className = "act cancel";
-  cancel.innerHTML = '<span class="t">' + (anyRed ? "Take nothing" : "So be it") + "</span>";
-  cancel.addEventListener("click", closeSheet);
-  sheet.appendChild(cancel);
-  $("#backdrop").classList.add("open");
-  sheet.classList.add("open");
+  $("#hp-num").textContent = S.hp + "/" + S.maxHp;
+  const rk = $("#relic-kit");
+  if (S.relics.length) {
+    rk.className = "kit";
+    rk.innerHTML =
+      '<button class="frame hexclip" id="relic-open" aria-label="Relics"><span class="fill hexclip"><span class="art">' + RELICS[S.relics[S.relics.length - 1]].art + "</span></span></button>" +
+      '<span class="badge small val">' + S.relics.length + "</span>" +
+      '<span class="kitline">relics</span>';
+    rk.querySelector("#relic-open").addEventListener("click", showRelicList);
+  } else {
+    rk.className = "kit empty";
+    rk.innerHTML = '<span class="frame slot"></span><span class="kitline">no relics</span>';
+  }
+
+  $("#focus-pips").innerHTML = "◆".repeat(S.focus) + '<span class="off">' + "◆".repeat(Math.max(0, 2 - S.focus)) + "</span>";
+  $("#gold-line").textContent = "🪙 " + S.gold;
+  const bp = $("#bloodpact-btn");
+  bp.hidden = !(hasRelic("bloodpact") && S.phase !== "over");
+  bp.disabled = S.hp <= 2;
+
+  // hand
+  const hand = $("#handrow");
+  hand.innerHTML = "";
+  S.skills.hand.forEach((id, i) => {
+    const sk = SKILLS[id];
+    const locked = i === S.lockedIdx;
+    const b = document.createElement("button");
+    b.className = "skill" + (locked ? " locked" : "");
+    b.disabled = locked || S.focus < sk.cost || S.phase === "over";
+    b.dataset.skill = id;
+    b.innerHTML =
+      '<span class="s-art">' + (locked ? "⛓️" : sk.art) + "</span>" +
+      '<span class="s-name">' + sk.name + "</span>" +
+      '<span class="s-cost">' + (locked ? "locked" : sk.cost === 0 ? "free" : "◆".repeat(sk.cost)) + "</span>";
+    b.addEventListener("click", () => openSkillSheet(id, i));
+    hand.appendChild(b);
+  });
+  const flee = document.createElement("button");
+  flee.id = "flee-btn";
+  flee.disabled = !canFleeNow() || mode !== null;
+  flee.innerHTML = '<span class="f-art">🏃</span>FLEE';
+  flee.addEventListener("click", doFlee);
+  hand.appendChild(flee);
+
+  $("#hint-line").textContent =
+    S.phase !== "room" && S.phase !== "boss" ? "" :
+    mode && mode.type === "smoke" ? (mode.picks.length === 2 ? "Tap Smoke Bomb again to finish." : "Choose " + (2 - mode.picks.length) + " card(s) to banish.") :
+    mode ? "Choose a target… (tap the skill again to cancel)" :
+    S.phase === "boss" ? "Tap the boss. Spend skills first if you need them." :
+    S.fledLast && !hasRelic("boots") && !S.slipActive ? "You fled the last room — no escape from this one." :
+    S.actedThisRoom > 0 ? "You have acted — see this room through." :
+    "Face 3 of 4. The last card follows you down.";
 }
 
+/* ================================================================
+   INTERACTION
+   ================================================================ */
 function floatText(text, tone) {
   const el = document.createElement("span");
   el.className = "float " + tone;
@@ -973,413 +964,599 @@ function floatText(text, tone) {
   $("#room").appendChild(el);
   el.addEventListener("animationend", () => el.remove());
 }
-function painFlash() {
-  const p = $("#pain");
-  p.classList.remove("on");
-  void p.offsetWidth;
-  p.classList.add("on");
-}
-function shakeScreen(big) {
-  const app = $("#app");
-  app.classList.remove("shake", "shake-big");
-  void app.offsetWidth;
-  app.classList.add(big ? "shake-big" : "shake");
-}
-function healPulse() {
-  const h = $("#hero-slab");
-  h.classList.remove("pulse");
-  void h.offsetWidth;
-  h.classList.add("pulse");
-}
+function painFlash() { const p = $("#pain"); p.classList.remove("on"); void p.offsetWidth; p.classList.add("on"); }
+function shakeScreen(big) { const a = $("#app"); a.classList.remove("shake", "shake-big"); void a.offsetWidth; a.classList.add(big ? "shake-big" : "shake"); }
+function healPulse() { const h = $("#hero"); h.classList.remove("pulse"); void h.offsetWidth; h.classList.add("pulse"); }
 
-/* ---------- action sheet ---------- */
-function sheetOption({ title, sub, lethal, disabled, classAct, onPick }) {
-  const b = document.createElement("button");
-  b.className = "act" + (lethal ? " lethal" : "") + (classAct ? " classact" : "");
-  b.disabled = !!disabled;
-  b.innerHTML = '<span class="t">' + title + '</span><span class="sub">' + sub + "</span>";
-  if (onPick) b.addEventListener("click", onPick);
-  return b;
-}
-function deathNote(dmg) { return dmg >= g.hp ? " — you will die" : ""; }
-
-function openSheet(c) {
-  if (g.status !== "playing") return;
-  SFX.tap();
-  const sheet = $("#sheet");
-  sheet.innerHTML = "";
-  const k = kindOf(c);
-  const h = document.createElement("h3");
-  const art = '<span class="h-art" aria-hidden="true">' + cardArt(c) + "</span>";
-  const cls = run.classId;
-  const hasCharge = run.charges > 0;
-
-  if (k === "enemy") {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— strength ' + c.r +
-      (mode === "snipe" ? " · sniping" : "") + "</span>";
-    sheet.appendChild(h);
-
-    if (g.weapon) {
-      if (canUseWeapon(g, c)) {
-        const dmg = previewDamage(g, c, true);
-        sheet.appendChild(sheetOption({
-          title: "Strike with the " + cardName(g.weapon) + " (" + g.weapon.r + ")",
-          sub: (dmg > 0 ? "take " + dmg + " damage" : "take no damage") +
-               " · blade dulls to ≤ " + c.r + deathNote(dmg),
-          lethal: dmg >= g.hp,
-          onPick: () => act(c, () => {
-            const taken = fight(g, c, true);
-            return taken > 0
-              ? { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: taken >= 8 ? 90 : 50 }
-              : { label: "blocked", tone: "steel", hit: true, sound: "slash" };
-          }),
-        }));
-        if (cls === "warrior" && hasCharge) {
-          sheet.appendChild(sheetOption({
-            title: "Flawless Blow 🃏",
-            sub: (dmg > 0 ? "take " + dmg + " damage" : "take no damage") +
-                 " · the blade stays sharp" + deathNote(dmg),
-            lethal: dmg >= g.hp, classAct: true,
-            onPick: () => act(c, () => {
-              run.charges--;
-              takeFromRoom(g, c);
-              const taken = Math.max(0, c.r - g.weapon.r); // no degradation
-              g.hp = Math.max(0, g.hp - taken);
-              resolveCard(g, c);
-              return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 };
-            }),
-          }));
-        }
-        if (cls === "dragonslayer" && hasCharge) {
-          const gd = Math.max(0, c.r - g.weapon.r - 5);
-          sheet.appendChild(sheetOption({
-            title: "Strike with Grit 🃏",
-            sub: (gd > 0 ? "take " + gd + " damage" : "take no damage") +
-                 " · +5 defense · blade dulls to ≤ " + c.r + deathNote(gd),
-            lethal: gd >= g.hp, classAct: true,
-            onPick: () => act(c, () => {
-              run.charges--;
-              takeFromRoom(g, c);
-              const taken = Math.max(0, c.r - g.weapon.r - 5);
-              g.weaponLimit = c.r;
-              g.hp = Math.max(0, g.hp - taken);
-              resolveCard(g, c);
-              return taken > 0
-                ? { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 }
-                : { label: "blocked", tone: "steel", hit: true, sound: "slash" };
-            }),
-          }));
-        }
-      } else {
-        sheet.appendChild(sheetOption({
-          title: cardName(g.weapon) + " is too dull",
-          sub: "it now only strikes monsters of value ≤ " + g.weaponLimit,
-          disabled: true,
-        }));
-      }
-      if (cls === "thief" && hasCharge) {
-        const td = Math.max(0, c.r - g.weapon.r);
-        sheet.appendChild(sheetOption({
-          title: "Knife Throw 🃏",
-          sub: (td > 0 ? "take " + td + " damage" : "take no damage") +
-               " · ignores dullness · the weapon is lost" + deathNote(td),
-          lethal: td >= g.hp, classAct: true,
-          onPick: () => act(c, () => {
-            run.charges--;
-            takeFromRoom(g, c);
-            const taken = Math.max(0, c.r - g.weapon.r);
-            g.weapon = null; g.weaponLimit = null;
-            g.hp = Math.max(0, g.hp - taken);
-            resolveCard(g, c);
-            return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 };
-          }),
-        }));
-      }
-    }
-
-    const bare = previewDamage(g, c, false);
-    sheet.appendChild(sheetOption({
-      title: "Fight bare-handed",
-      sub: "take " + bare + " damage" + deathNote(bare),
-      lethal: bare >= g.hp,
-      onPick: () => act(c, () => {
-        const taken = fight(g, c, false);
-        return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "thud", buzz: taken >= 8 ? 90 : 50 };
-      }),
-    }));
-    if (cls === "dragonslayer" && hasCharge) {
-      const gb = Math.max(0, c.r - 5);
-      sheet.appendChild(sheetOption({
-        title: "Bare-handed with Grit 🃏",
-        sub: (gb > 0 ? "take " + gb + " damage" : "take no damage") + " · +5 defense" + deathNote(gb),
-        lethal: gb >= g.hp, classAct: true,
-        onPick: () => act(c, () => {
-          run.charges--;
-          takeFromRoom(g, c);
-          const taken = Math.max(0, c.r - 5);
-          g.hp = Math.max(0, g.hp - taken);
-          resolveCard(g, c);
-          return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "thud", buzz: 50 };
-        }),
-      }));
-    }
-  } else if (k === "weapon") {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— power ' + c.r +
-      (mode === "snipe" ? " · sniping" : "") + "</span>";
-    sheet.appendChild(h);
-    sheet.appendChild(sheetOption({
-      title: "Take up the " + cardName(c),
-      sub: g.weapon ? "replaces the " + cardName(g.weapon) + " (" + g.weapon.r + ") · fresh edge"
-                    : "your hands are empty no longer",
-      onPick: () => act(c, () => { equip(g, c); return { label: "armed", tone: "steel", sound: "equip" }; }),
-    }));
-  } else {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— restores ' + c.r +
-      (mode === "snipe" ? " · sniping" : "") + "</span>";
-    sheet.appendChild(h);
-    const healed = g.elixirDrunk ? 0 : Math.min(g.maxHp - g.hp, c.r);
-    sheet.appendChild(sheetOption({
-      title: "Drink the " + cardName(c),
-      sub: g.elixirDrunk ? "no effect — you already drank in this room"
-         : healed === 0 ? "no effect — your health is already full"
-         : "restore " + healed + " health",
-      onPick: () => act(c, () => {
-        const n = drink(g, c);
-        return n > 0 ? { label: "+" + n, tone: "verd", heal: true, sound: "heal", buzz: 15 }
-                     : { label: "wasted", tone: "verd", sound: "tap" };
-      }),
-    }));
-    if (cls === "priestess" && hasCharge && g.elixirDrunk) {
-      const magicHeal = Math.min(g.maxHp - g.hp, c.r);
-      sheet.appendChild(sheetOption({
-        title: "Drink with Healing Magic 🃏",
-        sub: magicHeal > 0 ? "a second blessing · restore " + magicHeal + " health"
-                           : "no effect — your health is already full",
-        classAct: true,
-        onPick: () => act(c, () => {
-          run.charges--;
-          takeFromRoom(g, c);
-          const n = Math.min(g.maxHp - g.hp, c.r);
-          g.hp += n;
-          resolveCard(g, c);
-          return { label: n > 0 ? "+" + n : "wasted", tone: "verd", heal: true, sound: "heal", buzz: 15 };
-        }),
-      }));
-    }
-  }
-
-  const cancel = document.createElement("button");
-  cancel.className = "act cancel";
-  cancel.innerHTML = '<span class="t">Leave it</span>';
-  cancel.addEventListener("click", closeSheet);
-  sheet.appendChild(cancel);
-
-  $("#backdrop").classList.add("open");
-  sheet.classList.add("open");
-}
-function closeSheet() {
-  $("#sheet").classList.remove("open");
-  $("#backdrop").classList.remove("open");
-}
-$("#backdrop").addEventListener("click", closeSheet);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
-
-/* act() runs an engine action synchronously, then choreographs the result.
-   The class layer hooks in here: Snipe isolates the target before the action
-   and banishes the rest after; the Phoenix rewinds a death once. */
-function act(card, mutate) {
-  let sniped = null;
-  if (mode === "snipe" && card) {
-    run.charges--;
-    mode = null;
-    sniped = g.room.filter((x) => !same(x, card));
-    g.room.length = 0;
-    g.room.push(card);
-  }
-
-  let fx;
-  try { fx = mutate(); } catch (err) {
-    if (sniped) { g.room.push(...sniped); run.charges++; } // undo an illegal snipe
-    closeSheet(); render(); return;
-  }
-  closeSheet();
-
-  if (sniped && sniped.length) {
-    if (g.status === "won") g.status = "playing"; // room wasn't really empty
-    if (g.status === "lost") {
-      g.room.push(...sniped); // died mid-snipe: the rest were still in the room
-    } else {
-      g.dungeon.push(...sniped);
-      deal(g, false); // a fresh room; not a retreat
-    }
-  }
-
-  let reborn = false;
-  if (g.status === "lost" && run.classId === "phoenix" && run.charges > 0) {
-    run.charges--;
-    g.hp = 1;
-    g.status = "playing";
-    reborn = true;
-    // redo the post-resolution bookkeeping the death short-circuited
-    if (g.room.length === 0 && g.dungeon.length === 0) g.status = "won";
-    else if (g.room.length === 1 && g.dungeon.length > 0) deal(g, false);
-  }
-
-  const el = card ? $('#room [data-cid="' + cid(card) + '"]') : null;
+function choreograph(el, fx) {
   if (el) el.classList.add(fx.hit ? "hit" : "resolve");
   if (fx.sound && SFX[fx.sound]) SFX[fx.sound]();
-  if (fx.pain) { painFlash(); shakeScreen(fx.pain >= 8); }
-  if (fx.heal) healPulse();
-  if (fx.buzz) buzz(fx.buzz);
+  if (fx.pain) { painFlash(); shakeScreen(fx.pain >= 8); buzz(fx.pain >= 8 ? 90 : 50); }
+  if (fx.heal) { healPulse(); buzz(15); }
   floatText(fx.label, fx.tone);
-  if (reborn) setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); healPulse(); }, 380);
-
-  const roomEl = $("#room");
-  roomEl.style.pointerEvents = "none";
+  const room = $("#room");
+  room.style.pointerEvents = "none";
   setTimeout(() => {
-    roomEl.style.pointerEvents = "";
+    room.style.pointerEvents = "";
     render();
-    if (g.status === "won") setTimeout(showFloorClear, 550);
-    else if (g.status === "lost") { SFX.death(); setTimeout(() => finishRun(false), 800); }
+    if (S.phase === "room" || S.phase === "boss") {
+      if (S.hp === 0) endRun(false);
+    }
   }, fx.hit || fx.heal ? 330 : 190);
 }
 
-$("#flee").addEventListener("click", () => {
-  if (!canFlee(g) || mode !== null) return;
-  flee(g); // engine first — state is authoritative immediately
-  $("#flee").disabled = true; // reflect it before the animation finishes
+function onRoomTap(c, el) {
+  if (S.phase !== "room") return;
+  if (mode) return handleTargetTap(c, el);
+  openCardSheet(c);
+}
+
+/* ---------- card sheets ---------- */
+function sheetOption(o) {
+  const b = document.createElement("button");
+  b.className = "act" + (o.lethal ? " lethal" : "") + (o.goldact ? " goldact" : "");
+  b.disabled = !!o.disabled;
+  b.innerHTML = '<span class="t">' + o.title + '</span>' + (o.sub ? '<span class="sub">' + o.sub + "</span>" : "");
+  if (o.onPick) b.addEventListener("click", o.onPick);
+  return b;
+}
+function sheetShell(titleHTML, noteText) {
+  const sheet = $("#sheet");
+  sheet.innerHTML = "";
+  const h = document.createElement("h3");
+  h.innerHTML = titleHTML;
+  sheet.appendChild(h);
+  if (noteText) {
+    const p = document.createElement("p");
+    p.className = "note";
+    p.textContent = noteText;
+    sheet.appendChild(p);
+  }
+  return sheet;
+}
+function sheetCancel(sheet, label) {
+  const c = document.createElement("button");
+  c.className = "act cancel";
+  c.innerHTML = '<span class="t">' + (label || "Leave it") + "</span>";
+  c.addEventListener("click", closeSheet);
+  sheet.appendChild(c);
+  $("#backdrop").classList.add("open");
+  sheet.classList.add("open");
+}
+function closeSheet() { $("#sheet").classList.remove("open"); $("#backdrop").classList.remove("open"); }
+$("#backdrop").addEventListener("click", closeSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+function deathNote(dmg) { return dmg >= S.hp && !(hasRelic("phoenix") && !S.phoenixUsed) ? " — you will die" : ""; }
+
+function fightOptionRows(c, sheet, resolveAfter) {
+  const buffs = (S.strikeNext ? " · +“strike” " + S.strikeNext : "") + (S.gritNext ? " · grit +5" : "") + (S.block ? " · block " + S.block : "");
+  if (S.weapon) {
+    if (canUseWeapon(c)) {
+      const pv = previewFight(c, true);
+      sheet.appendChild(sheetOption({
+        title: "Strike with the " + S.weapon.name + " (" + S.weapon.power + ")",
+        sub: (pv.dmg > 0 ? "take " + pv.dmg : "take no") + " damage" + buffs + " · dulls to &lt; " + (S.weapon.id === "hammer" ? c.r - 2 : c.r) + deathNote(pv.dmg),
+        lethal: pv.dmg >= S.hp,
+        onPick: () => {
+          closeSheet();
+          const el = $('[data-cid="' + cid(c) + '"]');
+          const r = fightMonster(c, true);
+          resolveAfter(c);
+          choreograph(el, r.dmg > 0
+            ? { label: "−" + r.dmg, tone: "blood", hit: true, pain: r.dmg, sound: "slash" }
+            : { label: "blocked", tone: "steel", hit: true, sound: "slash" });
+          if (r.outcome === "phoenix") setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); }, 380);
+        },
+      }));
+    } else {
+      sheet.appendChild(sheetOption({
+        title: S.weapon.name + " is too dull",
+        sub: "it only cuts monsters of threat below " + effLimit(),
+        disabled: true,
+      }));
+    }
+  }
+  const pvB = previewFight(c, false);
+  sheet.appendChild(sheetOption({
+    title: "Fight bare-handed",
+    sub: (pvB.dmg > 0 ? "take " + pvB.dmg : "take no") + " damage" + buffs + deathNote(pvB.dmg),
+    lethal: pvB.dmg >= S.hp,
+    onPick: () => {
+      closeSheet();
+      const el = $('[data-cid="' + cid(c) + '"]');
+      const r = fightMonster(c, false);
+      resolveAfter(c);
+      choreograph(el, { label: "−" + r.dmg, tone: "blood", hit: true, pain: r.dmg, sound: "thud" });
+      if (r.outcome === "phoenix") setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); }, 380);
+    },
+  }));
+}
+
+function openCardSheet(c) {
+  SFX.tap();
+  const art = '<span class="h-art">' + cardArt(c) + "</span>";
+  const std = (card) => { removeFromRoom(card); afterResolve(); };
+
+  if (c.kind === "monster") {
+    const sheet = sheetShell(art + cardName(c) + ' <span class="dim">— threat ' + threatOf(c) + "</span>",
+      c.elite ? ELITES[c.elite].name + ": " + ELITES[c.elite].text + "." : null);
+    fightOptionRows(c, sheet, std);
+    sheetCancel(sheet);
+  } else if (c.kind === "potion") {
+    const sheet = sheetShell(art + cardName(c) + ' <span class="dim">— restores ' + c.r + "</span>");
+    const allowed = !S.potionDrunk || S.secondPotion;
+    const healed = allowed ? Math.min(S.maxHp - S.hp, c.r) : 0;
+    sheet.appendChild(sheetOption({
+      title: "Drink it",
+      sub: !allowed ? "no effect — one potion per room"
+         : healed === 0 ? "no effect — health is full"
+         : "restore " + healed + " health" + (hasRelic("emberheart") ? " · Ember Heart seeks a victim" : ""),
+      onPick: () => {
+        closeSheet();
+        let n = 0;
+        if (allowed) {
+          n = Math.min(S.maxHp - S.hp, c.r);
+          S.hp += n;
+          if (S.potionDrunk) S.secondPotion = false; else S.potionDrunk = true;
+        }
+        removeFromRoom(c);
+        // Ember Heart: also slay the strongest monster with threat <= potion value
+        let burned = null;
+        if (hasRelic("emberheart")) {
+          const targets = S.room.filter((m) => m.kind === "monster" && threatOf(m) <= c.r);
+          if (targets.length) {
+            burned = targets.reduce((a, b) => (threatOf(a) >= threatOf(b) ? a : b));
+            removeFromRoom(burned);
+            onSlain(burned);
+          }
+        }
+        afterResolve();
+        choreograph(null, { label: n > 0 ? "+" + n : "wasted", tone: "verd", heal: n > 0, sound: "heal" });
+        if (burned) setTimeout(() => { floatText(cardArt(burned) + " burned", "gold"); SFX.magic(); }, 300);
+      },
+    }));
+    sheetCancel(sheet);
+  } else if (c.kind === "treasure") {
+    const sheet = sheetShell(art + "Treasure <span class=\"dim\">— " + c.r + " gold</span>");
+    sheet.appendChild(sheetOption({
+      title: "Pocket it", goldact: true,
+      sub: "+" + (hasRelic("glasssigil") ? c.r * 2 : c.r) + " gold",
+      onPick: () => {
+        closeSheet();
+        goldGain(c.r);
+        removeFromRoom(c); afterResolve();
+        choreograph(null, { label: "+" + (hasRelic("glasssigil") ? c.r * 2 : c.r) + " 🪙", tone: "gold", sound: "coin" });
+      },
+    }));
+    sheetCancel(sheet);
+  } else if (c.kind === "cache") {
+    const sheet = sheetShell(art + "Loot Cache <span class=\"dim\">— a skill waits inside</span>");
+    sheet.appendChild(sheetOption({
+      title: "Pry it open", goldact: true, sub: "draft 1 of 3 skill cards — or take gold instead",
+      onPick: () => {
+        removeFromRoom(c);
+        showSkillDraft(() => { afterResolve(); render(); });
+      },
+    }));
+    sheetCancel(sheet);
+  } else { // curse
+    const cu = CURSES[c.curse];
+    const sheet = sheetShell('<span class="h-art">' + cu.art + "</span>" + cu.name + ' <span class="dim">— a curse</span>', cu.text);
+    sheet.appendChild(sheetOption({
+      title: "Suffer it", lethal: c.curse === "blight" && S.hp <= 3,
+      sub: "curses cannot be ignored",
+      onPick: () => {
+        closeSheet();
+        let fx = { label: "cursed", tone: "bone", sound: "curse" };
+        if (c.curse === "blight") { const o = loseHp(3); fx = { label: "−3", tone: "blood", pain: 3, sound: "curse" }; if (o === "phoenix") setTimeout(() => floatText("REBORN", "gold"), 380); }
+        if (c.curse === "thief") { S.gold = Math.max(0, S.gold - 5); fx = { label: "−5 🪙", tone: "gold", sound: "curse" }; }
+        if (c.curse === "rust" && S.weapon) { S.weaponLimit = S.weaponLimit === null ? S.weapon.power : Math.min(S.weaponLimit, S.weapon.power); }
+        removeFromRoom(c); afterResolve();
+        choreograph($('[data-cid="' + cid(c) + '"]'), fx);
+      },
+    }));
+    sheetCancel(sheet);
+  }
+}
+
+function openBossSheet() {
+  SFX.tap();
+  const b = S.boss;
+  const c = { kind: "monster", s: "♠", r: b.threat };
+  const sheet = sheetShell('<span class="h-art">' + b.art + "</span>" + b.name + ' <span class="dim">— threat ' + b.threat + (b.hitsLeft > 1 ? " · two lives" : "") + "</span>", b.text);
+  const mkPick = (useWeapon) => () => {
+    closeSheet();
+    const r = fightBoss(useWeapon);
+    const el = $('[data-cid="boss"]');
+    choreograph(el, r.dmg > 0
+      ? { label: "−" + r.dmg, tone: "blood", hit: true, pain: r.dmg, sound: useWeapon ? "slash" : "thud" }
+      : { label: "blocked", tone: "steel", hit: true, sound: useWeapon ? "slash" : "thud" });
+    if (r.outcome === "phoenix") setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); }, 380);
+    if (r.outcome === "slain") setTimeout(() => bossDefeated(), 700);
+    if (r.outcome === "dead") setTimeout(() => endRun(false), 500);
+  };
+  const buffs = (S.strikeNext ? " · +strike " + S.strikeNext : "") + (S.gritNext ? " · grit" : "") + (S.block ? " · block " + S.block : "");
+  if (S.weapon && canUseWeapon(c)) {
+    const pv = previewFight(c, true);
+    sheet.appendChild(sheetOption({
+      title: "Strike with the " + S.weapon.name + " (" + S.weapon.power + ")",
+      sub: (pv.dmg > 0 ? "take " + pv.dmg : "take no") + " damage" + buffs + (b.special === "pierce" ? " · he shrugs off 3 power" : "") + deathNote(pv.dmg),
+      lethal: pv.dmg >= S.hp, onPick: mkPick(true),
+    }));
+  } else if (S.weapon) {
+    sheet.appendChild(sheetOption({ title: S.weapon.name + " is too dull", sub: "it only cuts threat below " + effLimit(), disabled: true }));
+  }
+  const pvB = previewFight(c, false);
+  sheet.appendChild(sheetOption({
+    title: "Fight bare-handed",
+    sub: (pvB.dmg > 0 ? "take " + pvB.dmg : "take no") + " damage" + buffs + deathNote(pvB.dmg),
+    lethal: pvB.dmg >= S.hp, onPick: mkPick(false),
+  }));
+  sheetCancel(sheet, "Not yet");
+}
+
+/* ---------- skills ---------- */
+function spendSkill(idx) {
+  const id = S.skills.hand[idx];
+  S.focus -= SKILLS[id].cost;
+  S.skills.hand.splice(idx, 1);
+  if (S.lockedIdx > idx) S.lockedIdx--;
+  S.skills.disc.push(id);
+}
+function openSkillSheet(id, idx) {
+  if (mode && mode.skillId === id) { mode = null; render(); return; }
+  SFX.tap();
+  const sk = SKILLS[id];
+  const sheet = sheetShell('<span class="h-art">' + sk.art + "</span>" + sk.name + ' <span class="dim">— ' + (sk.cost === 0 ? "free" : sk.cost + " ◆") + "</span>", sk.text);
+  const play = (after) => { spendSkill(idx); closeSheet(); after(); render(); };
+  const needTargets = { bash: 1, revenant: 1, knifethrow: 1, snipe: 1, smokebomb: 1 };
+  let usable = S.focus >= sk.cost;
+  let why = "not enough focus";
+  if (usable) {
+    if (id === "knifethrow" && !S.weapon) { usable = false; why = "you carry no weapon"; }
+    if ((id === "bash" || id === "revenant") && !S.room.some((c) => c.kind === "monster" && threatOf(c) <= (id === "bash" ? 6 : 8)) && S.phase === "room") { usable = false; why = "no valid target in the room"; }
+    if (id === "smokebomb" && (S.deck.length < 2 || S.room.length < 2)) { usable = false; why = "needs 2 cards in deck and room"; }
+    if (id === "necromancy" && S.discard.length === 0) { usable = false; why = "the discard is empty"; }
+    if (needTargets[id] && S.phase === "boss") { usable = false; why = "no use against the boss"; }
+    if (id === "snipe" && S.room.length < 2) { usable = false; why = "nothing to banish"; }
+  }
+  sheet.appendChild(sheetOption({
+    title: "Play " + sk.name,
+    sub: usable ? sk.text : why,
+    disabled: !usable,
+    goldact: true,
+    onPick: () => {
+      if (id === "strike") play(() => { S.strikeNext += 3; floatText("+3 ⚔", "steel"); SFX.equip(); });
+      else if (id === "guard") play(() => { S.block += 4; floatText("+4 🛡", "steel"); SFX.equip(); });
+      else if (id === "grit") play(() => { S.gritNext += 5; floatText("grit", "steel"); SFX.equip(); });
+      else if (id === "slip") play(() => { S.slipActive = true; S.fledLast = false; floatText("slip", "bone"); SFX.whoosh(); });
+      else if (id === "mend") play(() => { const n = Math.min(S.maxHp - S.hp, 3); S.hp += n; floatText("+" + n, "verd"); SFX.heal(); healPulse(); });
+      else if (id === "pickpocket") play(() => { goldGain(4); floatText("+" + (hasRelic("glasssigil") ? 8 : 4) + " 🪙", "gold"); SFX.coin(); });
+      else if (id === "preserve") play(() => { S.preserveNext = true; floatText("preserved", "steel"); SFX.equip(); });
+      else if (id === "chalice") play(() => { S.secondPotion = true; floatText("chalice", "verd"); SFX.magic(); });
+      else if (id === "scout") { spendSkill(idx); closeSheet(); showScout(); }
+      else if (id === "necromancy") { spendSkill(idx); closeSheet(); showNecromancy(); }
+      else { // targeting skills
+        spendSkill(idx); closeSheet();
+        mode = { type: id === "smokebomb" ? "smoke" : id === "knifethrow" ? "knife" : id, skillId: id, picks: [] };
+        if (mode.type === "smoke") mode.drawn = S.deck.splice(0, 2);
+        render();
+      }
+    },
+  }));
+  sheetCancel(sheet, "Keep it");
+}
+function handleTargetTap(c, el) {
+  if (mode.type === "bash" || mode.type === "revenant") {
+    const max = mode.type === "bash" ? 6 : 8;
+    if (c.kind !== "monster" || threatOf(c) > max) { floatText("no", "bone"); return; }
+    mode = null;
+    removeFromRoom(c); onSlain(c); afterResolve();
+    choreograph(el, { label: "slain", tone: "gold", hit: true, sound: "slash" });
+  } else if (mode.type === "knife") {
+    if (c.kind !== "monster") { floatText("no", "bone"); return; }
+    mode = null;
+    const dmg = Math.max(0, threatOf(c) - (S.weapon ? S.weapon.power : 0) - S.gritNext + (c.elite === "armored" ? 2 : 0));
+    const blocked = Math.min(S.block, dmg); S.block -= blocked;
+    S.gritNext = 0;
+    const o = loseHp(dmg - blocked);
+    S.weapon = null; S.weaponLimit = null;
+    onSlain(c);
+    removeFromRoom(c); afterResolve();
+    choreograph(el, { label: "−" + (dmg - blocked), tone: "blood", hit: true, pain: dmg - blocked, sound: "slash" });
+    if (o === "phoenix") setTimeout(() => floatText("REBORN", "gold"), 380);
+  } else if (mode.type === "snipe") {
+    // open the normal action sheet for the target; if the player commits,
+    // the afterResolve wrapper banishes the rest. Cancelling keeps Snipe armed.
+    S.snipePending = true;
+    openCardSheet(c);
+  } else if (mode.type === "smoke") {
+    const i = mode.picks.findIndex((p) => cid(p) === cid(c));
+    if (i >= 0) mode.picks.splice(i, 1);
+    else if (mode.picks.length < 2) mode.picks.push(c);
+    if (mode.picks.length === 2) {
+      mode.picks.forEach((pick, j) => {
+        const idx = S.room.findIndex((x) => cid(x) === cid(pick));
+        S.deck.push(S.room[idx]);
+        S.room[idx] = mode.drawn[j];
+      });
+      mode = null;
+      SFX.whoosh();
+      floatText("swapped", "gold");
+    }
+    render();
+  }
+}
+/* snipe banishing: hook into afterResolve via wrapper */
+const _afterResolve = afterResolve;
+afterResolve = function () {
+  if (S.snipePending) {
+    S.snipePending = false;
+    mode = null;
+    if (S.hp > 0) {
+      S.deck.push(...S.room); // banish the rest of the room to the bottom
+      S.room = [];
+      if (S.deck.length > 0) dealRoom(false); else startBoss();
+      return;
+    }
+  }
+  _afterResolve();
+};
+
+function showScout() {
+  const top = S.deck.slice(0, 2);
+  const sheet = sheetShell('<span class="h-art">👁️</span>Scout <span class="dim">— the next two cards</span>');
+  const line = top.map((c) => cardArt(c) + " " + cardName(c) + (c.kind === "curse" ? "" : " (" + c.r + ")")).join("  ·  ");
+  const p = document.createElement("p");
+  p.className = "note"; p.textContent = top.length ? line : "The dungeon is spent.";
+  sheet.appendChild(p);
+  if (top.length === 2) {
+    sheet.appendChild(sheetOption({
+      title: "Swap their order", goldact: true, sub: "the second will come first",
+      onPick: () => { [S.deck[0], S.deck[1]] = [S.deck[1], S.deck[0]]; closeSheet(); SFX.whoosh(); render(); },
+    }));
+  }
+  sheetCancel(sheet, "Leave them");
+  render();
+}
+function showNecromancy() {
+  const pool = S.discard.slice();
+  shuffleWith(pool, S.rng);
+  const six = pool.slice(0, 6);
+  const sheet = sheetShell('<span class="h-art">🔮</span>Necromancy <span class="dim">— claim one red card</span>');
+  let anyRed = false;
+  six.forEach((c) => {
+    if (c.kind === "potion") {
+      anyRed = true;
+      const allowed = !S.potionDrunk || S.secondPotion;
+      const n = allowed ? Math.min(S.maxHp - S.hp, c.r) : 0;
+      sheet.appendChild(sheetOption({
+        title: "Raise the " + cardName(c) + " (" + c.r + "♥)", goldact: true,
+        sub: n > 0 ? "restore " + n + " health" : "no effect" + (allowed ? " — health is full" : " — one potion per room"),
+        onPick: () => {
+          if (allowed) { S.hp += Math.min(S.maxHp - S.hp, c.r); if (S.potionDrunk) S.secondPotion = false; else S.potionDrunk = true; }
+          closeSheet(); SFX.heal(); healPulse(); floatText(n > 0 ? "+" + n : "wasted", "verd"); render();
+        },
+      }));
+    } else if (c.kind === "treasure" || c.kind === "cache") {
+      anyRed = true;
+      const val = c.kind === "cache" ? 6 : c.r;
+      sheet.appendChild(sheetOption({
+        title: "Raise the " + cardName(c) + " (♦)", goldact: true,
+        sub: "+" + (hasRelic("glasssigil") ? val * 2 : val) + " gold",
+        onPick: () => { goldGain(val); closeSheet(); SFX.coin(); floatText("+🪙", "gold"); render(); },
+      }));
+    } else {
+      sheet.appendChild(sheetOption({ title: cardName(c), sub: "the dead offer no aid", disabled: true }));
+    }
+  });
+  if (!anyRed) sheet.appendChild(sheetOption({ title: "Only bones answered", sub: "nothing happens", disabled: true }));
+  sheetCancel(sheet, anyRed ? "Take nothing" : "So be it");
+  render();
+}
+
+/* ---------- drafts, shop, relics ---------- */
+function pickN(pool, n) {
+  const arr = pool.slice();
+  shuffleWith(arr, S.rng);
+  return arr.slice(0, n);
+}
+function showSkillDraft(done) {
+  const picks = pickN(DRAFT_POOL, 3);
+  const sheet = sheetShell('<span class="h-art">🎁</span>Loot Cache <span class="dim">— take one</span>');
+  picks.forEach((id) => {
+    const sk = SKILLS[id];
+    sheet.appendChild(sheetOption({
+      title: sk.art + " " + sk.name + " (" + (sk.cost === 0 ? "free" : sk.cost + "◆") + ")",
+      sub: sk.text, goldact: true,
+      onPick: () => { S.skills.disc.push(id); closeSheet(); SFX.magic(); floatText(sk.art, "gold"); done(); },
+    }));
+  });
+  sheet.appendChild(sheetOption({
+    title: "Take the coin instead", sub: "+" + (hasRelic("glasssigil") ? 10 : 5) + " gold",
+    onPick: () => { goldGain(5); closeSheet(); SFX.coin(); done(); },
+  }));
+  $("#backdrop").classList.add("open");
+  $("#sheet").classList.add("open");
+}
+function showRelicDraft(done) {
+  const unowned = Object.keys(RELICS).filter((id) => !hasRelic(id));
+  const picks = pickN(unowned, Math.min(3, unowned.length));
+  const sheet = sheetShell('<span class="h-art">🏆</span>Boss Trophy <span class="dim">— choose a relic</span>');
+  picks.forEach((id) => {
+    const r = RELICS[id];
+    sheet.appendChild(sheetOption({
+      title: r.art + " " + r.name, sub: r.text, goldact: true,
+      onPick: () => { gainRelic(id); closeSheet(); SFX.magic(); done(); },
+    }));
+  });
+  if (!picks.length) { closeSheet(); return done(); }
+  $("#backdrop").classList.add("open");
+  $("#sheet").classList.add("open");
+}
+function gainRelic(id) {
+  S.relics.push(id);
+  if (id === "glasssigil") { S.maxHp = 12; S.hp = Math.min(S.hp, 12); }
+}
+function showRelicList() {
+  SFX.tap();
+  const sheet = sheetShell('<span class="h-art">🏺</span>Your Relics');
+  S.relics.forEach((id) => {
+    const r = RELICS[id];
+    sheet.appendChild(sheetOption({ title: r.art + " " + r.name, sub: r.text, disabled: true }));
+  });
+  sheetCancel(sheet, "Close");
+}
+function showShop(done) {
+  const stockW = pickN(Object.keys(WEAPONS).filter((id) => id !== "dagger" && (!S.weapon || id !== S.weapon.id)), 2);
+  const stockR = pickN(Object.keys(RELICS).filter((id) => !hasRelic(id)), 2);
+  const stockS = pickN(DRAFT_POOL, 2);
+  const removalPrice = () => 8 + S.removals * 4;
+  const rebuild = () => {
+    const sheet = sheetShell('<span class="h-art">🏪</span>The Between-Depths Shop <span class="dim">— 🪙 ' + S.gold + "</span>",
+      "Spend before descending. Gold stays; regrets don't.");
+    const row = (icon, name, sub, price, buy, soldOut) => {
+      const b = document.createElement("button");
+      b.className = "act" + (soldOut || price > S.gold ? "" : " goldact");
+      b.disabled = soldOut || price > S.gold;
+      b.innerHTML = '<span class="shoprow"><span class="s-icon">' + icon + '</span><span class="s-body"><span class="t">' + name + '</span><span class="sub">' + sub + '</span></span><span class="price">' + (soldOut ? "sold" : "🪙 " + price) + "</span></span>";
+      if (!soldOut) b.addEventListener("click", () => { S.gold -= price; buy(); SFX.coin(); rebuild(); });
+      sheet.appendChild(b);
+    };
+    stockW.forEach((id, i) => {
+      const w = WEAPONS[id];
+      row(w.art, w.name + " (" + w.power + ")", w.text, w.price, () => { S.weapon = Object.assign({ id }, w); S.weaponLimit = null; stockW[i] = null; }, stockW[i] === null);
+    });
+    stockR.forEach((id, i) => {
+      const r = RELICS[id];
+      row(r.art, r.name, r.text, r.price, () => { gainRelic(id); stockR[i] = null; }, stockR[i] === null);
+    });
+    stockS.forEach((id, i) => {
+      const sk = SKILLS[id];
+      row(sk.art, sk.name + " (skill)", sk.text, 5, () => { S.skills.disc.push(id); stockS[i] = null; }, stockS[i] === null);
+    });
+    row("🧉", "Tonic", "Heal 6 on the spot.", 6, () => { S.hp = Math.min(S.maxHp, S.hp + 6); });
+    // removal charges only when a card is actually chosen inside showRemoval
+    const rm = document.createElement("button");
+    const rp = removalPrice();
+    rm.className = "act" + (rp > S.gold ? "" : " goldact");
+    rm.disabled = rp > S.gold;
+    rm.innerHTML = '<span class="shoprow"><span class="s-icon">✂️</span><span class="s-body"><span class="t">Remove a skill card</span><span class="sub">Thin your deck — the fee rises each time.</span></span><span class="price">🪙 ' + rp + "</span></span>";
+    rm.addEventListener("click", () => showRemoval(rp, () => rebuild()));
+    sheet.appendChild(rm);
+    const leave = document.createElement("button");
+    leave.className = "act cancel";
+    leave.innerHTML = '<span class="t">Descend to Depth ' + DEPTHS[Math.min(2, S.depth)].numeral + " →</span>";
+    leave.addEventListener("click", () => { closeSheet(); done(); });
+    sheet.appendChild(leave);
+    $("#backdrop").classList.add("open");
+    $("#sheet").classList.add("open");
+    render();
+  };
+  rebuild();
+}
+function showRemoval(price, back) {
+  const sheet = sheetShell('<span class="h-art">✂️</span>Remove a card <span class="dim">— it leaves the run</span>');
+  const zones = [["draw", S.skills.draw], ["disc", S.skills.disc], ["hand", S.skills.hand]];
+  const counts = {};
+  zones.forEach(([z, arr]) => arr.forEach((id) => { counts[id] = (counts[id] || 0) + 1; }));
+  Object.keys(counts).forEach((id) => {
+    const sk = SKILLS[id];
+    sheet.appendChild(sheetOption({
+      title: sk.art + " " + sk.name + " ×" + counts[id], sub: sk.text, goldact: true,
+      onPick: () => {
+        for (const [, arr] of zones) {
+          const i = arr.indexOf(id);
+          if (i >= 0) { arr.splice(i, 1); break; }
+        }
+        S.gold -= price;
+        S.removals++;
+        SFX.coin();
+        closeSheet(); back();
+      },
+    }));
+  });
+  sheetCancel(sheet, "Never mind");
+}
+
+/* ---------- flee ---------- */
+function doFlee() {
+  if (!canFleeNow() || mode !== null) return;
+  S.deck.push(...S.room);
+  S.room = [];
+  S.slipActive = false;
+  dealRoom(true);
   SFX.whoosh();
   floatText("fled", "bone");
-  document.querySelectorAll("#room .card").forEach((el) => el.classList.add("fleeing"));
-  const roomEl = $("#room");
-  roomEl.style.pointerEvents = "none";
-  setTimeout(() => { roomEl.style.pointerEvents = ""; render(); }, 270);
-});
+  document.querySelectorAll("#room .cardhex").forEach((el) => el.classList.add("fleeing"));
+  setTimeout(render, 270);
+}
 
-/* ---------- overlays ---------- */
-function openClassPick(seed) {
-  pendingSeed = seed;
-  const grid = $("#class-grid");
-  grid.innerHTML = "";
-  Object.keys(CLASSES).forEach((id) => {
-    const c = CLASSES[id];
-    const b = document.createElement("button");
-    b.className = "class-opt";
-    b.dataset.class = id;
-    b.innerHTML =
-      '<span class="c-art" aria-hidden="true">' + c.art + '</span>' +
-      '<span class="c-body"><span class="c-name">' + c.name + '</span>' +
-      '<span class="c-card">' + c.card + " · " + c.ability + '</span>' +
-      '<span class="c-blurb">' + c.blurb + "</span></span>";
-    b.addEventListener("click", () => { SFX.tap(); startRun(pendingSeed, id); });
-    grid.appendChild(b);
-  });
-  const rand = document.createElement("button");
-  rand.className = "class-opt wide";
-  rand.dataset.class = "random";
-  rand.innerHTML = '<span class="c-art" aria-hidden="true">🃏</span>' +
-    '<span class="c-body"><span class="c-name">Fate Decides</span>' +
-    '<span class="c-blurb">shuffle the class cards and draw one at random</span></span>';
-  rand.addEventListener("click", () => {
-    SFX.tap();
-    const keys = Object.keys(CLASSES);
-    startRun(pendingSeed, keys[Math.floor(Math.random() * keys.length)]);
-  });
-  grid.appendChild(rand);
-  const none = document.createElement("button");
-  none.className = "class-opt wide";
-  none.dataset.class = "none";
-  none.innerHTML = '<span class="c-art" aria-hidden="true">🕯️</span>' +
-    '<span class="c-body"><span class="c-name">Classless</span>' +
-    '<span class="c-blurb">the pure descent — no abilities, no jokers</span></span>';
-  none.addEventListener("click", () => { SFX.tap(); startRun(pendingSeed, null); });
-  grid.appendChild(none);
+/* ---------- interstitial / overlays ---------- */
+function showInterstitial(o) {
+  $("#int-eyebrow").textContent = o.eyebrow;
+  $("#int-art").textContent = o.art;
+  $("#int-title").textContent = o.title;
+  $("#int-title").className = "verdict " + (o.bad ? "bad" : "good");
+  $("#int-text").textContent = o.text;
+  $("#int-btn").textContent = o.btn;
+  const btn = $("#int-btn");
+  const clone = btn.cloneNode(true);
+  btn.parentNode.replaceChild(clone, btn);
+  clone.addEventListener("click", () => { $("#interstitial").classList.remove("open"); o.onGo(); });
+  $("#interstitial").classList.add("open");
+}
 
+/* ---------- boot / persistence ---------- */
+let lastSeed = null;
+function startGame(seed) {
+  lastSeed = String(seed);
+  newRun(lastSeed);
   $("#start").classList.remove("open");
   $("#end").classList.remove("open");
-  $("#classpick").classList.add("open");
+  $("#interstitial").classList.remove("open");
+  closeSheet();
+  render();
 }
-
-function showFloorClear() {
-  const floorScore = score(g);
-  const mult = multFor(run.floor);
-  run.lastEarned = Math.round(floorScore * mult);
-  run.unbanked += run.lastEarned;
-  SFX.coin();
-
-  $("#fc-eyebrow").textContent = "floor " + run.floor + " lies empty";
-  $("#fc-earned").textContent =
-    "floor score " + floorScore + (mult !== 1 ? " × " + mult : "") + " → " + run.lastEarned + " gold";
-  $("#fc-unbanked").textContent = "unbanked hoard " + run.unbanked;
-  $("#fc-health").textContent =
-    "You stand at " + g.hp + " health" +
-    (g.weapon ? ", " + cardName(g.weapon) + " in hand" +
-      (g.weaponLimit !== null ? " (dulled to ≤ " + g.weaponLimit + ")" : "") : ", bare-handed") +
-    (run.classId ? ", " + run.charges + " joker" + (run.charges === 1 ? "" : "s") + " left" : "") + ".";
-  $("#btn-descend").textContent = "Descend — floor " + (run.floor + 1) + " pays ×" + multFor(run.floor + 1);
-  $("#btn-retreat").textContent = "Retreat with " + run.unbanked + " gold";
-  $("#floorclear").classList.add("open");
-}
-
-function finishRun(retreated) {
-  const kept = retreated ? run.unbanked : Math.floor(run.unbanked * SALVAGE);
-  const isBest = saveBests(kept, run.floor);
-
-  $("#end-eyebrow").textContent = retreated ? "you climb into daylight" : "the dungeon keeps you";
-  const v = $("#end-verdict");
-  v.textContent = retreated ? "ESCAPED" : "SLAIN";
-  v.className = "verdict " + (retreated ? "won" : "lost");
-  $("#end-art").textContent = retreated ? "🪙" : (g.lastResolved ? cardArt(g.lastResolved) : "☠");
-  $("#end-epitaph").textContent = retreated
-    ? "You retreat from floor " + run.floor + " with your hoard intact."
-    : "The " + (g.lastResolved ? cardName(g.lastResolved) : "dungeon") +
-      " ends your descent on floor " + run.floor + ". You salvage " + kept +
-      " of " + run.unbanked + " unbanked gold.";
-  $("#end-score").textContent = "hoard " + kept + " · floor " + run.floor;
-  const b = bests();
-  $("#end-best").textContent = isBest ? "new best hoard"
-    : b.hoard !== null ? "best hoard " + b.hoard + " · deepest floor " + b.floor : "";
-  $("#floorclear").classList.remove("open");
-  $("#end").classList.add("open");
-  if (retreated) SFX.coin();
-}
-
-$("#btn-new").addEventListener("click", () => { SFX.tap(); openClassPick(randomSeed()); });
-$("#btn-again").addEventListener("click", () => { SFX.tap(); openClassPick(randomSeed()); });
-$("#btn-retry").addEventListener("click", () => { SFX.tap(); startRun(seedStr, lastClassId); });
-$("#btn-daily").addEventListener("click", () => { SFX.tap(); openClassPick(dailySeed()); });
-$("#btn-daily2").addEventListener("click", () => { SFX.tap(); openClassPick(dailySeed()); });
-$("#btn-descend").addEventListener("click", descend);
-$("#btn-retreat").addEventListener("click", () => finishRun(true));
-$("#btn-daily").textContent = "Daily Dungeon · " + dailyLabel();
+function randomSeed() { return String(Math.floor(Math.random() * 9007199254740991)); }
+function dailySeed() { const d = new Date(); return String(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()); }
+$("#btn-new").addEventListener("click", () => { SFX.tap(); startGame(randomSeed()); });
+$("#btn-again").addEventListener("click", () => { SFX.tap(); startGame(randomSeed()); });
+$("#btn-retry").addEventListener("click", () => { SFX.tap(); startGame(lastSeed); });
+$("#btn-daily").addEventListener("click", () => { SFX.tap(); startGame(dailySeed()); });
+$("#btn-daily2").addEventListener("click", () => { SFX.tap(); startGame(dailySeed()); });
+$("#btn-daily").textContent = "Daily Descent · " + new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" });
 $("#mute").textContent = SFX.muted() ? "🔇" : "🔊";
 $("#mute").addEventListener("click", () => { $("#mute").textContent = SFX.toggle() ? "🔇" : "🔊"; });
+$("#bloodpact-btn").addEventListener("click", () => {
+  if (!hasRelic("bloodpact") || S.hp <= 2) return;
+  S.hp -= 2; S.focus += 1;
+  SFX.curse(); painFlash(); floatText("+◆", "gold");
+  render();
+});
 (function initStart() {
-  const b = bests();
-  if (b.hoard !== null)
-    $("#start-best").textContent = "best hoard " + b.hoard + " · deepest floor " + b.floor;
+  const b = bestsGet();
+  if (b.score !== null) $("#start-best").textContent = "best score " + b.score + " · depth " + (b.depth || 1);
 })();
 
-/* ---------- ambient ember motes ---------- */
+/* ---------- ambient motes ---------- */
 (function motes() {
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const cv = $("#motes"), cx = cv.getContext("2d");
   let w, h;
   function size() { w = cv.width = innerWidth; h = cv.height = innerHeight; }
-  size();
-  addEventListener("resize", size);
-  const ps = Array.from({ length: 22 }, () => ({
-    x: Math.random(), y: Math.random(),
-    s: 0.5 + Math.random() * 1.5, v: 0.18 + Math.random() * 0.5, drift: Math.random() * 6.28,
+  size(); addEventListener("resize", size);
+  const ps = Array.from({ length: 20 }, () => ({
+    x: Math.random(), y: Math.random(), s: 0.5 + Math.random() * 1.4,
+    v: 0.15 + Math.random() * 0.45, drift: Math.random() * 6.28,
   }));
   (function tick() {
     cx.clearRect(0, 0, w, h);
-    cx.fillStyle = "rgba(226, 140, 60, 1)";
+    cx.fillStyle = "rgba(217,164,65,1)";
     for (const p of ps) {
-      p.y -= p.v / 1000;
-      p.drift += 0.01;
+      p.y -= p.v / 1000; p.drift += 0.01;
       if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); }
-      cx.globalAlpha = 0.06 + 0.18 * Math.sin(p.drift * 2) ** 2;
+      cx.globalAlpha = 0.05 + 0.16 * Math.sin(p.drift * 2) ** 2;
       cx.beginPath();
       cx.arc((p.x + Math.sin(p.drift) * 0.012) * w, p.y * h, p.s, 0, 7);
       cx.fill();
@@ -1390,28 +1567,13 @@ $("#mute").addEventListener("click", () => { $("#mute").textContent = SFX.toggle
 })();
 
 /* ================================================================
-   Test hooks (used by the Playwright harness; harmless in play)
+   Test hooks
    ================================================================ */
-window.__scroundel = {
-  deckForSeed: (s) => { const d = createDungeon(); shuffle(d, BigInt(s)); return d.map(fmt).join(","); },
-  start: (s, cls) => startRun(s, cls || null),
-  state: () => g,
-  run: () => run,
+window.__ud = {
+  start: (s) => startGame(s),
+  state: () => S,
   render: () => render(),
-  autoplay: (s) => {
-    const G = newGame(BigInt(s));
-    let steps = 0;
-    while (G.status === "playing" && steps++ < 100) {
-      const c = G.room[0];
-      if (kindOf(c) === "weapon") equip(G, c);
-      else if (kindOf(c) === "elixir") drink(G, c);
-      else fight(G, c, canUseWeapon(G, c));
-      const total = G.dungeon.length + G.room.length + G.discard.length;
-      if (total !== 44) throw new Error("card conservation broken: " + total);
-      if (G.hp < 0 || G.hp > G.maxHp) throw new Error("hp out of range: " + G.hp);
-    }
-    return { status: G.status, score: score(G), steps, discard: G.discard.map(fmt).join(",") };
-  },
+  fns: { canUseWeapon, previewFight, canFleeNow, hasRelic, gainRelic, scoreParts, buildDepthDeck },
 };
 </script>
 <!-- ART:END -->

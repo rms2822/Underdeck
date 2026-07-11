@@ -1,23 +1,25 @@
-# Scroundel
+# Scroundel / UNDERDECK
 
-A mobile RPG dungeon-crawler (iOS + Android, Unity) built on the core gameplay
-of the card game **Scoundrel** by Zach Gage & Kurt Bieg.
+A mobile roguelike deckbuilder built on the chassis of the card game
+**Scoundrel** (Zach Gage & Kurt Bieg).
 
-📋 **Read [`GAME_PLAN.md`](GAME_PLAN.md) first** — the full design & development
-plan: mechanic mapping, RPG layer, retention systems, architecture,
-monetization, and roadmap.
+📋 **[`UNDERDECK_GDD.md`](UNDERDECK_GDD.md) is the master design document** —
+the Scoundrel-meets-Slay-the-Spire vision: skill decks, relics, depths,
+bosses, and shops layered on the room-puzzle loop. `GAME_PLAN.md` holds the
+earlier production planning (architecture, monetization research, retention
+systems) and remains useful background.
 
 ## Play it now
 
-`prototype/index.html` is the complete game as a self-contained web build —
-open it in any browser (phone or desktop, no server needed). It runs a
-line-for-line JavaScript port of the C# engine, verified to produce
-bit-identical dungeons and outcomes for the same seeds, and includes the
-Daily Dungeon (everyone gets the same date-seeded deck), best-hoard tracking,
-and the **Descend or Retreat** push-your-luck loop from GAME_PLAN §3.5: clear
-a floor, then bank your gold or descend to a fresh floor at a higher
-multiplier — dying salvages only 20% of the unbanked hoard. Use it for
-Phase 0 playtesting while the Unity app is built.
+`prototype/index.html` is the **UNDERDECK vertical slice** as a self-contained
+web build — open it in any browser, no server needed. It implements the GDD's
+core: the 3-of-4 room loop with strictly-lower weapon dulling, a Wanderer
+skill deck (hand of 3, 2 Focus per room), 8 rule-breaking relics, kit weapons
+with specials, gold/treasure economy with loot-cache drafts, 3 Depths
+(curses in II, elites in III) each capped by a boss, between-depth shops with
+deck-thinning, GDD scoring, and a seeded Daily Descent. The Red Court class
+abilities (designed on the physical deck) live on as draftable skills and the
+Phoenix Feather relic.
 
 ## What exists right now
 

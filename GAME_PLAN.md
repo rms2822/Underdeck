@@ -1,5 +1,11 @@
 # Scroundel — Design & Development Plan
 
+> **Superseded as the design source of truth by [`UNDERDECK_GDD.md`](UNDERDECK_GDD.md)**
+> (the roguelike-deckbuilder direction). This document remains the reference
+> for production planning: architecture (§5), monetization research (§6),
+> testing (§10), and publishing (§9). The §3.5 retention systems and the Red
+> Court classes fed directly into the GDD's relic/skill design.
+
 An RPG dungeon-crawler for iOS & Android, built on the core gameplay of the
 single-player card game **Scoundrel** (Zach Gage & Kurt Bieg).
 
