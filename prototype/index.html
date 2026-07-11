@@ -515,7 +515,7 @@ const CURSES = {
   rust:   { name: "Rustwind",      art: "🌫️", text: "Your blade dulls to its own power." },
 };
 const WEAPONS = {
-  dagger:  { name: "Rusty Dagger",     power: 3, art: "🔪", text: "A delver's first friend.", price: 0 },
+  dagger:  { name: "Rusty Dagger",     power: 4, art: "🔪", text: "A delver's first friend.", price: 0 },
   rapier:  { name: "Duelist's Rapier", power: 5, art: "🗡️", text: "Doesn't dull when you take no damage.", price: 8 },
   kris:    { name: "Kris of Thirst",   power: 4, art: "⚔️", text: "Heal 1 whenever it slays.", price: 10 },
   whisper: { name: "Whisper Blade",    power: 6, art: "🌬️", text: "Ignores dulling against threat 4 or less.", price: 12 },
@@ -540,6 +540,7 @@ const SKILLS = {
   mend:       { name: "Mend",          cost: 1, art: "🌿", text: "Heal 3." },
   pickpocket: { name: "Pickpocket",    cost: 0, art: "💰", text: "Gain 4 gold." },
   preserve:   { name: "Preserve",      cost: 1, art: "🧿", text: "Your next weapon kill doesn't dull the blade." },
+  sharpen:    { name: "Sharpen",       cost: 1, art: "⚒️", text: "Restore your weapon to a keen edge — undo all dulling." },
   snipe:      { name: "Snipe",         cost: 1, art: "🏹", text: "Resolve one card; banish the rest of the room to the bottom." },
   knifethrow: { name: "Knife Throw",   cost: 1, art: "🔪", text: "Fight a monster ignoring dullness; the weapon is lost." },
   grit:       { name: "Grit",          cost: 1, art: "🐲", text: "+5 defense on your next fight this room." },
@@ -548,8 +549,8 @@ const SKILLS = {
   necromancy: { name: "Necromancy",    cost: 2, art: "🔮", text: "Unearth 6 discarded cards; claim one red." },
   revenant:   { name: "Revenant",      cost: 1, art: "🦴", text: "Slay a monster of threat 8 or less." },
 };
-const STARTER_DECK = ["strike", "strike", "strike", "strike", "guard", "guard", "guard", "scout", "scout", "slip"];
-const DRAFT_POOL = ["bash", "mend", "pickpocket", "preserve", "snipe", "knifethrow", "grit", "chalice", "smokebomb", "necromancy", "strike", "guard"];
+const STARTER_DECK = ["strike", "strike", "strike", "strike", "guard", "guard", "guard", "scout", "sharpen", "slip"];
+const DRAFT_POOL = ["bash", "mend", "pickpocket", "preserve", "sharpen", "snipe", "knifethrow", "grit", "chalice", "smokebomb", "necromancy", "strike", "guard"];
 const DEPTHS = [
   { name: "The Cellars",       numeral: "I" },
   { name: "The Flooded Vaults",numeral: "II" },
@@ -684,7 +685,7 @@ function newRun(seed) {
     rng: splitmix64(BigInt(base) ^ 0xC0FFEEn),
     depth: 1, phase: "room", roomNo: 0,
     hp: 20, maxHp: 20, gold: 0,
-    weapon: Object.assign({ id: "dagger" }, WEAPONS.dagger), weaponLimit: null,
+    weapon: Object.assign({ id: "dagger" }, WEAPONS.dagger), weaponLimit: null, weaponBonus: 0,
     relics: [], phoenixUsed: false,
     deck: buildDepthDeck(1, BigInt(base)),
     room: [], discard: [],
@@ -735,17 +736,18 @@ function effLimit() {
   if (S.weaponLimit === null) return Infinity;
   return hasRelic("whetstone") ? Math.max(S.weaponLimit, 5) : S.weaponLimit;
 }
+function effPower() { return S.weapon ? S.weapon.power + (S.weaponBonus || 0) : 0; }
 function canUseWeapon(c) {
   if (!S.weapon || c.kind !== "monster") return false;
   if (S.weapon.id === "whisper" && c.r <= 4) return true;
-  return c.r < effLimit(); // GDD: strictly lower
+  return c.r <= effLimit(); // equal-or-lower: you can finish off a matching rank
 }
 function threatOf(c) { return c.r + (c.elite === "brutal" ? 2 : 0); }
 function previewFight(c, useWeapon, opts) {
   opts = opts || {};
   let power = 0;
   if (useWeapon && S.weapon) {
-    power = S.weapon.power;
+    power = effPower();
     if (c.elite === "armored") power -= 2;
     if (S.phase === "boss" && S.boss.special === "pierce") power -= 3;
   }
@@ -847,6 +849,7 @@ function bossDefeated() {
   if (S.depth >= 3) return endRun(true);
   showRelicDraft(() => showShop(() => {
     S.depth++;
+    S.weaponBonus++; // your blade grows keener as you descend (+1 power per depth)
     S.deck = buildDepthDeck(S.depth, BigInt(S.seed) + BigInt(S.depth * 7919));
     S.phase = "room"; S.boss = null; S.room = [];
     dealRoom(false);
@@ -960,9 +963,9 @@ function render() {
     wk.className = "kit";
     wk.innerHTML =
       '<span class="frame hexclip"><span class="fill hexclip"><span class="art">' + S.weapon.art + "</span></span></span>" +
-      '<span class="badge small val">' + S.weapon.power + "</span>" +
+      '<span class="badge small val">' + effPower() + "</span>" +
       '<span class="kitline">' + S.weapon.name.split(" ").pop() +
-      (S.weaponLimit !== null ? ' <span class="limit">&lt; ' + effLimit() + "</span>" : " · keen") + "</span>";
+      (S.weaponLimit !== null ? ' <span class="limit">≤ ' + effLimit() + "</span>" : " · keen") + "</span>";
   } else {
     wk.className = "kit empty";
     wk.innerHTML = '<span class="frame slot"></span><span class="kitline">unarmed</span>';
@@ -1101,8 +1104,8 @@ function fightOptionRows(c, sheet, resolveAfter) {
     if (canUseWeapon(c)) {
       const pv = previewFight(c, true);
       sheet.appendChild(sheetOption({
-        title: "Strike with the " + S.weapon.name + " (" + S.weapon.power + ")",
-        sub: (pv.dmg > 0 ? "take " + pv.dmg : "take no") + " damage" + buffs + " · dulls to &lt; " + (S.weapon.id === "hammer" ? c.r - 2 : c.r) + deathNote(pv.dmg),
+        title: "Strike with the " + S.weapon.name + " (" + effPower() + ")",
+        sub: (pv.dmg > 0 ? "take " + pv.dmg : "take no") + " damage" + buffs + " · dulls to ≤ " + (S.weapon.id === "hammer" ? c.r - 2 : c.r) + deathNote(pv.dmg),
         lethal: pv.dmg >= S.hp,
         onPick: () => {
           closeSheet();
@@ -1118,7 +1121,7 @@ function fightOptionRows(c, sheet, resolveAfter) {
     } else {
       sheet.appendChild(sheetOption({
         title: S.weapon.name + " is too dull",
-        sub: "it only cuts monsters of threat below " + effLimit(),
+        sub: "it only cuts monsters of threat " + effLimit() + " or less",
         disabled: true,
       }));
     }
@@ -1246,12 +1249,12 @@ function openBossSheet() {
   if (S.weapon && canUseWeapon(c)) {
     const pv = previewFight(c, true);
     sheet.appendChild(sheetOption({
-      title: "Strike with the " + S.weapon.name + " (" + S.weapon.power + ")",
+      title: "Strike with the " + S.weapon.name + " (" + effPower() + ")",
       sub: (pv.dmg > 0 ? "take " + pv.dmg : "take no") + " damage" + buffs + (b.special === "pierce" ? " · he shrugs off 3 power" : "") + deathNote(pv.dmg),
       lethal: pv.dmg >= S.hp, onPick: mkPick(true),
     }));
   } else if (S.weapon) {
-    sheet.appendChild(sheetOption({ title: S.weapon.name + " is too dull", sub: "it only cuts threat below " + effLimit(), disabled: true }));
+    sheet.appendChild(sheetOption({ title: S.weapon.name + " is too dull", sub: "it only cuts threat " + effLimit() + " or less", disabled: true }));
   }
   const pvB = previewFight(c, false);
   sheet.appendChild(sheetOption({
@@ -1284,6 +1287,7 @@ function openSkillSheet(id, idx) {
     if ((id === "bash" || id === "revenant") && !S.room.some((c) => c.kind === "monster" && threatOf(c) <= (id === "bash" ? 6 : 8)) && S.phase === "room") { usable = false; why = "no valid target in the room"; }
     if (id === "smokebomb" && (S.deck.length < 2 || S.room.length < 2)) { usable = false; why = "needs 2 cards in deck and room"; }
     if (id === "necromancy" && S.discard.length === 0) { usable = false; why = "the discard is empty"; }
+    if (id === "sharpen" && (!S.weapon || S.weaponLimit === null)) { usable = false; why = S.weapon ? "your blade is already keen" : "you carry no weapon"; }
     if (needTargets[id] && S.phase === "boss") { usable = false; why = "no use against the boss"; }
     if (id === "snipe" && S.room.length < 2) { usable = false; why = "nothing to banish"; }
   }
@@ -1300,6 +1304,7 @@ function openSkillSheet(id, idx) {
       else if (id === "mend") play(() => { const n = Math.min(S.maxHp - S.hp, 3); S.hp += n; floatText("+" + n, "verd"); SFX.heal(); healPulse(); });
       else if (id === "pickpocket") play(() => { goldGain(4); floatText("+" + (hasRelic("glasssigil") ? 8 : 4) + " 🪙", "gold"); SFX.coin(); });
       else if (id === "preserve") play(() => { S.preserveNext = true; floatText("preserved", "steel"); SFX.equip(); });
+      else if (id === "sharpen") play(() => { S.weaponLimit = null; floatText("keen!", "steel"); SFX.equip(); });
       else if (id === "chalice") play(() => { S.secondPotion = true; floatText("chalice", "verd"); SFX.magic(); });
       else if (id === "scout") { spendSkill(idx); closeSheet(); showScout(); }
       else if (id === "necromancy") { spendSkill(idx); closeSheet(); showNecromancy(); }
@@ -1323,7 +1328,7 @@ function handleTargetTap(c, el) {
   } else if (mode.type === "knife") {
     if (c.kind !== "monster") { floatText("no", "bone"); return; }
     mode = null;
-    const dmg = Math.max(0, threatOf(c) - (S.weapon ? S.weapon.power : 0) - S.gritNext + (c.elite === "armored" ? 2 : 0));
+    const dmg = Math.max(0, threatOf(c) - effPower() - S.gritNext + (c.elite === "armored" ? 2 : 0));
     const blocked = Math.min(S.block, dmg); S.block -= blocked;
     S.gritNext = 0;
     const o = loseHp(dmg - blocked);
@@ -1670,11 +1675,11 @@ const TUT = [
   },
   {
     title: "Your blade dulls",
-    body: "The catch that <b>is</b> the game: after your weapon kills, it can only cut <b>strictly weaker</b> monsters. Slay an 8 and your blade won't touch a 9 — fight it bare-handed, or find another way.",
+    body: "The catch that <b>is</b> the game: after your weapon kills, it can only cut monsters of <b>equal or lower</b> threat. Slay an 8 and your blade still bites 8s and below — but a 9 needs another answer, until you <b class='s'>Sharpen</b> it or descend deeper.",
     stage: () => [
       tutHex({ kind: "monster", s: "♠", r: 8 }, { tag: "just slain", dim: true }),
-      tutHex({ kind: "monster", s: "♣", r: 9 }, { tag: "✗ too dull" }),
-      tutHex({ kind: "monster", s: "♠", r: 6 }, { tag: "✓ still cuts" }),
+      tutHex({ kind: "monster", s: "♣", r: 9 }, { tag: "✗ too tough" }),
+      tutHex({ kind: "monster", s: "♠", r: 8 }, { tag: "✓ still cuts" }),
     ],
   },
   {
@@ -1788,7 +1793,7 @@ window.__ud = {
   state: () => S,
   render: () => render(),
   tutorial: { open: openTutorial, pages: () => TUT.length, index: () => tutIdx },
-  fns: { canUseWeapon, previewFight, canFleeNow, hasRelic, gainRelic, scoreParts, buildDepthDeck },
+  fns: { canUseWeapon, previewFight, effPower, canFleeNow, hasRelic, gainRelic, scoreParts, buildDepthDeck },
 };
 </script>
 <!-- ART:END -->
