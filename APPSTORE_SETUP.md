@@ -100,7 +100,7 @@ Developer account's API integration. Don't post it publicly.
 
 ## 6. Add the secrets to your GitHub repo
 
-1. On **github.com**, go to `rms2822/Scroundel` → **Settings** → **Secrets
+1. On **github.com**, go to `rms2822/Underdeck` → **Settings** → **Secrets
    and variables** → **Actions** → **New repository secret**.
 2. Add each of these four (exact names matter — the workflow reads them
    by these names):
@@ -117,7 +117,7 @@ Developer account's API integration. Don't post it publicly.
 
 ## 7. Run the build
 
-1. On github.com: `rms2822/Scroundel` → **Actions** tab → **iOS Release
+1. On github.com: `rms2822/Underdeck` → **Actions** tab → **iOS Release
    (build + upload to TestFlight)** (left sidebar) → **Run workflow**
    button → pick the branch (`claude/scoundrel-game-n427my`, or wherever
    this ends up) → **Run workflow**.
