@@ -311,6 +311,64 @@
   .scoretable { font-family: var(--mono); font-size: 12.5px; color: var(--bone-dim); display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
   .scoretable .total { color: var(--gold); font-size: 16px; margin-top: 4px; }
   .best-line { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
+  .menagerie { font-size: 24px; letter-spacing: .3em; filter: saturate(.85) drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+
+  /* ============ tutorial ============ */
+  #tutorial { justify-content: flex-start; gap: 12px; padding-top: max(46px, env(safe-area-inset-top)); }
+  #tut-skip {
+    position: absolute; top: 14px; right: 16px; z-index: 2;
+    width: 34px; height: 34px; border-radius: 50%; font-size: 15px;
+    color: var(--bone-dim); background: rgba(255,255,255,.06); border: 1px solid rgba(223,216,200,.16);
+  }
+  .tut-title { font-family: var(--serif); font-size: clamp(24px, 6.5vw, 30px); font-weight: 600; color: var(--bone); text-wrap: balance; letter-spacing: .01em; }
+  .tut-stage {
+    width: 100%; max-width: 360px; min-height: 190px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+    padding: 6px 0;
+  }
+  .tut-stage .cardhex { animation: hexin .4s ease backwards; position: relative; }
+  .tut-stage .arrow { font-size: 22px; color: var(--gold); align-self: center; }
+  .tut-stage .tag {
+    position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--gold); white-space: nowrap;
+  }
+  .tut-carry { outline: 2px dashed var(--gold); outline-offset: 3px; border-radius: 4px; }
+  .tut-mini-skill {
+    width: 78px; border-radius: 9px; padding: 8px 6px;
+    background: linear-gradient(170deg, var(--slate), var(--slate-lo));
+    border: 1px solid rgba(223,216,200,.16);
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+  }
+  .tut-mini-skill .s-art { font-size: 22px; }
+  .tut-mini-skill .s-name { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--bone); }
+  .tut-mini-skill .s-cost { font-family: var(--mono); font-size: 9px; color: var(--gold); }
+  .tut-emblem {
+    width: 92px; height: 102px; display: grid; place-items: center;
+    background: linear-gradient(160deg, var(--gold), var(--gold-deep));
+  }
+  .tut-emblem .inner {
+    position: absolute; inset: 4px; display: grid; place-items: center;
+    background: repeating-linear-gradient(45deg, rgba(217,164,65,.07) 0 4px, transparent 4px 8px), linear-gradient(170deg, var(--slate), var(--slate-lo));
+  }
+  .tut-emblem span { font-size: 30px; color: var(--gold-hi); font-weight: 600; }
+  .tut-relic-chip {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    background: rgba(0,0,0,.28); border: 1px solid rgba(217,164,65,.35); border-radius: 10px;
+    padding: 9px 13px; max-width: 300px;
+  }
+  .tut-relic-chip .r-art { font-size: 24px; }
+  .tut-relic-chip .r-name { color: var(--gold); font-size: 13px; }
+  .tut-relic-chip .r-text { font-size: 11px; color: var(--bone-dim); font-style: italic; }
+  .tut-body { max-width: 34ch; font-size: 14.5px; line-height: 1.55; color: var(--bone-dim); text-wrap: pretty; }
+  .tut-body b { color: var(--bone); font-weight: 600; }
+  .tut-body .r { color: var(--blood); } .tut-body .g { color: var(--gold); } .tut-body .v { color: var(--verd); } .tut-body .s { color: var(--steel); }
+  .tut-dots { display: flex; gap: 7px; margin-top: 2px; }
+  .tut-dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(223,216,200,.22); transition: background .2s, transform .2s; }
+  .tut-dots i.on { background: var(--gold); transform: scale(1.25); }
+  .tut-nav { display: flex; gap: 10px; width: 100%; max-width: 300px; margin-top: 2px; }
+  .tut-nav .cta { flex: 1; padding: 13px; }
+  .tut-nav .cta.ghost.hidden { visibility: hidden; }
 
   @media (prefers-reduced-motion: reduce) {
     .cardhex.enter, .cardhex.hit .frame, .cardhex.resolve, .cardhex.fleeing,
@@ -366,18 +424,27 @@
   <p class="caps">descend · deal · survive</p>
   <h1 class="logo big">UNDERDECK</h1>
   <p class="caps faint">the dungeon is a deck that wants you dead</p>
+  <p class="menagerie" aria-hidden="true">🗡️ 🐉 🧪 🪙 🏆</p>
   <div class="flourish"></div>
-  <div class="digest">
-    <p><b class="r">Monsters (♠♣)</b> deal their threat. Your weapon absorbs its power — but after a kill it only cuts <b>strictly weaker</b> monsters.</p>
-    <p><b class="v">Potions (♥)</b> heal, one per room. <b class="g">Treasure (♦)</b> is gold; face diamonds hold skill drafts.</p>
-    <p>Face <b>3 of each room's 4 cards</b>, carry the last forward. Flee a fresh room — never twice in a row.</p>
-    <p>Each room deal a <b>hand of 3 skills</b> and spend <b class="g">2 ◆ focus</b>. Slay three Depth bosses to escape. Relics rewrite the rules.</p>
-  </div>
   <div class="btn-col">
     <button class="cta" id="btn-new">Begin the Descent</button>
+    <button class="cta ghost" id="btn-how">How to Play</button>
     <button class="cta ghost" id="btn-daily">Daily Descent</button>
   </div>
   <p class="best-line" id="start-best"></p>
+</div>
+
+<div class="overlay" id="tutorial">
+  <button id="tut-skip" aria-label="Close guide">✕</button>
+  <p class="caps" id="tut-step"></p>
+  <h2 class="tut-title" id="tut-title"></h2>
+  <div class="tut-stage" id="tut-stage"></div>
+  <div class="tut-body" id="tut-body"></div>
+  <div class="tut-dots" id="tut-dots"></div>
+  <div class="tut-nav">
+    <button class="cta ghost" id="tut-prev">Back</button>
+    <button class="cta" id="tut-next">Next</button>
+  </div>
 </div>
 
 <div class="overlay" id="interstitial">
@@ -1534,9 +1601,156 @@ $("#bloodpact-btn").addEventListener("click", () => {
   SFX.curse(); painFlash(); floatText("+◆", "gold");
   render();
 });
+/* ================================================================
+   TUTORIAL — a paged rule guide with real card visuals
+   ================================================================ */
+function tutHex(card, opts) {
+  opts = opts || {};
+  const d = document.createElement("div");
+  d.className = "cardhex " + card.kind + (card.elite ? " elite" : "") + (opts.carry ? " tut-carry" : "");
+  if (opts.dim) d.style.opacity = ".4";
+  d.innerHTML = hexCardHTML(card) + (opts.tag ? '<span class="tag">' + opts.tag + "</span>" : "");
+  return d;
+}
+function tutSkill(id) {
+  const sk = SKILLS[id];
+  const d = document.createElement("div");
+  d.className = "tut-mini-skill";
+  d.innerHTML = '<span class="s-art">' + sk.art + "</span><span class=\"s-name\">" + sk.name +
+    "</span><span class=\"s-cost\">" + (sk.cost === 0 ? "free" : "◆".repeat(sk.cost)) + "</span>";
+  return d;
+}
+function tutEmblem(n) {
+  const d = document.createElement("div");
+  d.className = "tut-emblem hexclip";
+  d.innerHTML = '<div class="inner hexclip"><span>' + n + "</span></div>";
+  return d;
+}
+function tutRelic(id) {
+  const r = RELICS[id];
+  const d = document.createElement("div");
+  d.className = "tut-relic-chip";
+  d.innerHTML = '<span class="r-art">' + r.art + '</span><span><span class="r-name">' + r.name +
+    '</span><br><span class="r-text">' + r.text + "</span></span>";
+  return d;
+}
+function tutArrow() { const s = document.createElement("span"); s.className = "arrow"; s.textContent = "→"; return s; }
+function tutFleeTile() {
+  const d = document.createElement("div");
+  d.style.cssText = "width:74px;height:88px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:linear-gradient(180deg,var(--blood),var(--blood-deep));color:#fff;font-weight:700;letter-spacing:.18em;font-size:11px";
+  d.innerHTML = '<span style="font-size:22px">🏃</span>FLEE';
+  return d;
+}
+
+const TUT = [
+  {
+    title: "The Dungeon Deck",
+    body: "Every card below wants you dead — or wants to help. You survive by clearing the whole deck, one <b>Room</b> at a time.",
+    stage: () => [tutEmblem("44")],
+  },
+  {
+    title: "A Room is four cards",
+    body: "Reveal a Room of 4. Face any <b>3 of them</b> in the order you choose — then the <b class='g'>4th (dashed) carries over</b> into the next room. You're always shaping what you drag forward.",
+    stage: () => [
+      tutHex({ kind: "monster", s: "♣", r: 6 }),
+      tutHex({ kind: "potion", s: "♥", r: 5 }),
+      tutHex({ kind: "treasure", s: "♦", r: 4 }),
+      tutHex({ kind: "monster", s: "♠", r: 8 }, { carry: true }),
+    ],
+  },
+  {
+    title: "Fighting monsters",
+    body: "A <b class='r'>monster (♠♣)</b> deals its <b class='r'>threat</b> in damage. Your <b>weapon</b> soaks up its power — a Dagger (3) against a Dire Wolf (8) means you take just <b>5</b>. Or fight <b>bare-handed</b> and take the full 8.",
+    stage: () => {
+      const wep = document.createElement("div");
+      wep.className = "tut-mini-skill";
+      wep.innerHTML = '<span class="s-art">🔪</span><span class="s-name">Dagger</span><span class="s-cost">power 3</span>';
+      return [wep, tutArrow(), tutHex({ kind: "monster", s: "♠", r: 8 }, { tag: "take 5" })];
+    },
+  },
+  {
+    title: "Your blade dulls",
+    body: "The catch that <b>is</b> the game: after your weapon kills, it can only cut <b>strictly weaker</b> monsters. Slay an 8 and your blade won't touch a 9 — fight it bare-handed, or find another way.",
+    stage: () => [
+      tutHex({ kind: "monster", s: "♠", r: 8 }, { tag: "just slain", dim: true }),
+      tutHex({ kind: "monster", s: "♣", r: 9 }, { tag: "✗ too dull" }),
+      tutHex({ kind: "monster", s: "♠", r: 6 }, { tag: "✓ still cuts" }),
+    ],
+  },
+  {
+    title: "Potions, gold & caches",
+    body: "<b class='v'>Potions (♥)</b> heal — but only the <b>first</b> you drink each room. <b class='g'>Treasure (♦)</b> is gold to spend at shops. A <b class='g'>Loot Cache</b> lets you draft a new skill card.",
+    stage: () => [
+      tutHex({ kind: "potion", s: "♥", r: 6 }),
+      tutHex({ kind: "treasure", s: "♦", r: 7 }),
+      tutHex({ kind: "cache", s: "♦", r: 11 }),
+    ],
+  },
+  {
+    title: "Skills & Focus",
+    body: "Each room you draw a <b>hand of 3 skills</b> and get <b class='g'>2 ◆ focus</b> to spend. <b class='s'>Strike</b> sharpens a hit, <b class='s'>Guard</b> blocks damage, <b class='s'>Scout</b> peeks ahead. Draft more as you descend and your build comes alive.",
+    stage: () => [tutSkill("strike"), tutSkill("guard"), tutSkill("scout")],
+  },
+  {
+    title: "Flee — but not twice",
+    body: "Instead of facing a room, <b>flee</b>: the four cards shuffle to the bottom and a fresh room deals. But you <b class='r'>can't flee two rooms in a row</b> — that single rule is what makes every room a puzzle.",
+    stage: () => [tutFleeTile(), tutArrow(), tutEmblem("↓")],
+  },
+  {
+    title: "Relics, Depths & Bosses",
+    body: "<b class='g'>Relics</b> rewrite the rules — collect them from bosses and shops. Clear each of the <b>three Depths</b> to face its boss; curses and elites lurk in the deep. Beat all three to escape. Good luck, Delver.",
+    stage: () => {
+      const trophy = document.createElement("span");
+      trophy.className = "bigart"; trophy.textContent = "🏆";
+      return [trophy, tutRelic("whetstone")];
+    },
+    last: true,
+  },
+];
+
+let tutIdx = 0;
+function tutRender() {
+  const page = TUT[tutIdx];
+  $("#tut-step").textContent = "How to Play · " + (tutIdx + 1) + " of " + TUT.length;
+  $("#tut-title").textContent = page.title;
+  $("#tut-body").innerHTML = page.body;
+  const stage = $("#tut-stage");
+  stage.innerHTML = "";
+  page.stage().forEach((n) => stage.appendChild(n));
+  const dots = $("#tut-dots");
+  dots.innerHTML = "";
+  TUT.forEach((_, i) => {
+    const d = document.createElement("i");
+    if (i === tutIdx) d.className = "on";
+    dots.appendChild(d);
+  });
+  $("#tut-prev").classList.toggle("hidden", tutIdx === 0);
+  $("#tut-next").textContent = page.last ? "Begin the Descent" : "Next";
+}
+function openTutorial() {
+  tutIdx = 0;
+  tutRender();
+  $("#tutorial").classList.add("open");
+}
+function closeTutorial() {
+  $("#tutorial").classList.remove("open");
+  try { localStorage.setItem("underdeck.taught", "1"); } catch (e) {}
+}
+$("#btn-how").addEventListener("click", () => { SFX.tap(); openTutorial(); });
+$("#tut-skip").addEventListener("click", () => { SFX.tap(); closeTutorial(); });
+$("#tut-prev").addEventListener("click", () => { if (tutIdx > 0) { SFX.tap(); tutIdx--; tutRender(); } });
+$("#tut-next").addEventListener("click", () => {
+  SFX.tap();
+  if (TUT[tutIdx].last) { closeTutorial(); startGame(randomSeed()); }
+  else { tutIdx++; tutRender(); }
+});
+
 (function initStart() {
   const b = bestsGet();
   if (b.score !== null) $("#start-best").textContent = "best score " + b.score + " · depth " + (b.depth || 1);
+  let taught = false;
+  try { taught = localStorage.getItem("underdeck.taught") === "1"; } catch (e) {}
+  if (!taught) openTutorial();
 })();
 
 /* ---------- ambient motes ---------- */
@@ -1573,6 +1787,7 @@ window.__ud = {
   start: (s) => startGame(s),
   state: () => S,
   render: () => render(),
+  tutorial: { open: openTutorial, pages: () => TUT.length, index: () => tutIdx },
   fns: { canUseWeapon, previewFight, canFleeNow, hasRelic, gainRelic, scoreParts, buildDepthDeck },
 };
 </script>
