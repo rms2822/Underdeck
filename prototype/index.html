@@ -35,7 +35,6 @@
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
-  /* torchlight overhead */
   body::before {
     content: "";
     position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -95,6 +94,7 @@
     transition: transform .12s ease;
   }
   .card:active { transform: scale(.96); }
+  .card.selected { outline: 2px solid var(--gold); outline-offset: -2px; transform: scale(.97); }
   .card .suit { position: absolute; top: 8px; left: 11px; font-size: 15px; }
   .card .val { position: absolute; top: 6px; right: 11px; font-size: 19px; font-weight: 700; }
   .card .art {
@@ -138,6 +138,7 @@
   .float.verd  { color: var(--verdigris); }
   .float.steel { color: var(--steel); }
   .float.bone  { color: var(--bone-dim); }
+  .float.gold  { color: var(--gold); }
   @keyframes floatUp { to { opacity: 0; transform: translateX(-50%) translateY(-52px); } }
 
   /* ============ hero tableau ============ */
@@ -173,6 +174,24 @@
   #hp-fill.high { background: linear-gradient(90deg, #5d7a68, var(--verdigris)); }
   #hp-num { font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums; }
 
+  /* ============ class ability bar ============ */
+  #ability-bar {
+    width: 100%; margin-top: 10px;
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    border-radius: 10px; padding: 9px 14px;
+    background: linear-gradient(170deg, var(--stone-hi), var(--stone-lo));
+    border: 1px solid rgba(217,164,65,.3);
+    box-shadow: 0 6px 14px rgba(0,0,0,.4);
+  }
+  #ability-bar.armed { border-color: var(--gold); box-shadow: 0 0 14px rgba(217,164,65,.25); }
+  #ability-bar.unavail { opacity: .45; }
+  #ability-bar:disabled { cursor: default; }
+  #ability-pips { font-size: 17px; letter-spacing: .1em; white-space: nowrap; }
+  #ability-pips .spent { opacity: .22; filter: grayscale(1); }
+  .ab-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  #ability-label { font-size: 14px; color: var(--gold); }
+  #ability-hint { font-family: var(--mono); font-size: 10px; color: var(--bone-dim); }
+
   /* ============ flee bar ============ */
   footer { display: flex; flex-direction: column; gap: 6px; align-items: center; margin-top: 10px; }
   #flee {
@@ -191,7 +210,7 @@
   #backdrop.open { opacity: 1; pointer-events: auto; }
   #sheet {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
-    max-width: 430px; margin: 0 auto;
+    max-width: 430px; margin: 0 auto; max-height: 78dvh; overflow-y: auto;
     background: linear-gradient(180deg, var(--stone-hi), var(--stone));
     border-radius: 14px 14px 0 0;
     border: 1px solid rgba(232,220,200,.12); border-bottom: 0;
@@ -214,6 +233,8 @@
   .act .sub { font-family: var(--mono); font-size: 11px; color: var(--bone-dim); }
   .act.lethal { border-color: rgba(226,88,34,.55); }
   .act.lethal .sub { color: var(--ember); }
+  .act.classact { border-color: rgba(217,164,65,.45); }
+  .act.classact .t { color: var(--gold); }
   .act.cancel { border-color: transparent; background: none; align-items: center; }
   .act.cancel .t { color: var(--bone-faint); font-style: italic; font-size: 13px; }
 
@@ -249,6 +270,22 @@
   .gold-text { color: var(--gold); }
   .best-line { font-family: var(--mono); font-size: 11.5px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
 
+  /* class select */
+  .class-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 380px; }
+  .class-opt {
+    display: flex; gap: 10px; align-items: center; text-align: left;
+    padding: 10px 12px; border-radius: 10px;
+    background: linear-gradient(170deg, var(--stone-hi), var(--stone-lo));
+    border: 1px solid rgba(232,220,200,.14);
+  }
+  .class-opt:active { border-color: var(--gold); }
+  .class-opt .c-art { font-size: 26px; filter: saturate(.8) drop-shadow(0 3px 6px rgba(0,0,0,.6)); }
+  .class-opt .c-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .class-opt .c-name { font-size: 13.5px; }
+  .class-opt .c-card { font-family: var(--mono); font-size: 9.5px; color: var(--gold); letter-spacing: .12em; }
+  .class-opt .c-blurb { font-size: 10.5px; color: var(--bone-dim); line-height: 1.35; }
+  .class-opt.wide { grid-column: 1 / -1; }
+
   @media (prefers-reduced-motion: reduce) {
     body::before, .card.boss, .card.enter, .card.hit, .card.resolve, .card.fleeing,
     #app.shake, #app.shake-big, #pain.on, .slab.hero.pulse { animation: none !important; }
@@ -277,7 +314,7 @@
       <span class="slab-num" id="deck-count">40</span>
     </div>
     <div class="slab hero" id="hero-slab">
-      <span class="art" aria-hidden="true">🛡️</span>
+      <span class="art" id="hero-art" aria-hidden="true">🛡️</span>
       <div class="hp-wrap">
         <div class="hp-bar"><div id="hp-fill" style="width:100%"></div></div>
         <span id="hp-num">20 / 20</span>
@@ -289,6 +326,14 @@
       <span class="slab-num" id="weapon-info">—</span>
     </div>
   </section>
+
+  <button id="ability-bar" hidden>
+    <span id="ability-pips"></span>
+    <span class="ab-text">
+      <span id="ability-label"></span>
+      <span id="ability-hint"></span>
+    </span>
+  </button>
 
   <footer>
     <button id="flee">Flee the Room</button>
@@ -316,6 +361,14 @@
     <button class="cta ghost" id="btn-daily">Daily Dungeon</button>
   </div>
   <p class="best-line" id="start-best"></p>
+</div>
+
+<div class="overlay" id="classpick">
+  <p class="eyebrow">the red court answers</p>
+  <h2 class="title" style="font-size:clamp(26px,7vw,34px)">CHOOSE YOUR CLASS</h2>
+  <p class="epitaph">Each carries two jokers 🃏 — spend them on your class ability.</p>
+  <div class="class-grid" id="class-grid"></div>
+  <p class="best-line">classes designed &amp; playtested on the physical deck</p>
 </div>
 
 <div class="overlay" id="floorclear">
@@ -373,6 +426,9 @@ function createDungeon() {
 }
 function shuffle(a, seed) {
   const next = splitmix64(seed);
+  shuffleWith(a, next);
+}
+function shuffleWith(a, next) {
   for (let i = a.length - 1; i > 0; i--) {
     const j = Number(next() % BigInt(i + 1));
     [a[i], a[j]] = [a[j], a[i]];
@@ -489,6 +545,47 @@ function floorSeed(base, floor) {
 const SALVAGE = 0.2; // fraction of the unbanked hoard kept on death
 
 /* ================================================================
+   CLASS LAYER — the Red Court (GAME_PLAN §3.1).
+   The eight removed red cards are character classes; two jokers per
+   run are ability charges. Layered over the untouched engine.
+   ================================================================ */
+const CLASSES = {
+  hunter: {
+    card: "J♦", name: "The Hunter", ability: "Snipe", art: "🏹",
+    blurb: "Resolve one card, banish the rest of the room to the bottom. Not a retreat.",
+  },
+  thief: {
+    card: "Q♦", name: "The Thief", ability: "Knife Throw", art: "🔪",
+    blurb: "Fight any monster with your weapon as if it were sharp — then lose the weapon.",
+  },
+  warrior: {
+    card: "K♦", name: "The Warrior", ability: "Flawless Blow", art: "⚔️",
+    blurb: "Kill with your weapon without dulling it.",
+  },
+  mage: {
+    card: "J♥", name: "The Mage", ability: "Necromancy", art: "🔮",
+    blurb: "Shuffle the discard, draw 6, use one red card among them.",
+  },
+  priestess: {
+    card: "Q♥", name: "The Priestess", ability: "Healing Magic", art: "✨",
+    blurb: "Drink a second elixir in a room.",
+  },
+  dragonslayer: {
+    card: "K♥", name: "The Dragonslayer", ability: "Grit", art: "🐲",
+    blurb: "+5 defense on one fight, armed or bare-handed.",
+  },
+  drifter: {
+    card: "A♦", name: "The Drifter", ability: "Smoke Bomb", art: "💨",
+    blurb: "Draw 2 cards and swap them into the room; the pair you swap out goes to the bottom.",
+  },
+  phoenix: {
+    card: "A♥", name: "The Phoenix", ability: "Rebirth", art: "🔥",
+    blurb: "On reaching 0 health, survive at 1. Automatic.",
+  },
+};
+const MAX_CHARGES = 2; // the two jokers
+
+/* ================================================================
    FLAVOR — names and art per rank band (GAME_PLAN §3.2)
    ================================================================ */
 const ENEMY_NAMES = {
@@ -564,6 +661,7 @@ const SFX = (() => {
     equip:  () => { tone(392, 0.07, "triangle", 0.12); setTimeout(() => tone(587, 0.09, "triangle", 0.12), 60); },
     whoosh: () => noise(0.26, 0.12, 900),
     coin:   () => { tone(988, 0.07, "square", 0.05); setTimeout(() => tone(1319, 0.13, "square", 0.05), 70); },
+    magic:  () => { tone(440, 0.1, "sine", 0.08); setTimeout(() => tone(659, 0.1, "sine", 0.08), 80); setTimeout(() => tone(880, 0.18, "sine", 0.08), 160); },
     death:  () => { tone(170, 0.7, "sawtooth", 0.12, -110); noise(0.5, 0.14, 400); },
     toggle: () => {
       muted = !muted;
@@ -578,11 +676,16 @@ const SFX = (() => {
    UI
    ================================================================ */
 let g = null;
-let run = null; // { baseSeed, floor, unbanked, lastEarned }
+let run = null; // { baseSeed, floor, unbanked, lastEarned, classId, charges, rngNext }
 let seedStr = null;
+let lastClassId = null;
 let prevIds = new Set();
+let mode = null; // null | "snipe" | "drift"
+let driftDrawn = null, driftPicks = [];
+let pendingSeed = null; // seed waiting on class selection
 const $ = (q) => document.querySelector(q);
 const cid = (c) => c.r + c.s;
+const same = (a, b) => a.s === b.s && a.r === b.r;
 
 function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
@@ -604,14 +707,22 @@ function saveBests(hoard, floor) {
   return newHoard;
 }
 
-function startRun(seed) {
+function startRun(seed, classId) {
   seedStr = String(seed);
-  run = { baseSeed: seedStr, floor: 1, unbanked: 0, lastEarned: 0 };
+  lastClassId = classId || null;
+  run = {
+    baseSeed: seedStr, floor: 1, unbanked: 0, lastEarned: 0,
+    classId: classId || null,
+    charges: classId ? MAX_CHARGES : 0,
+    rngNext: splitmix64(BigInt(seedStr) ^ 0xABC0FFEEn), // ability RNG stream, deterministic per run
+  };
   g = newGame(floorSeed(seedStr, 1));
   prevIds = new Set();
+  mode = null; driftDrawn = null; driftPicks = [];
   $("#start").classList.remove("open");
   $("#end").classList.remove("open");
   $("#floorclear").classList.remove("open");
+  $("#classpick").classList.remove("open");
   closeSheet();
   render();
 }
@@ -622,6 +733,7 @@ function descend() {
   g = newGame(floorSeed(run.baseSeed, run.floor));
   g.hp = hp; g.weapon = weapon; g.weaponLimit = limit;
   prevIds = new Set();
+  mode = null; driftDrawn = null; driftPicks = [];
   $("#floorclear").classList.remove("open");
   SFX.whoosh();
   render();
@@ -642,6 +754,7 @@ function render() {
   $("#gold-count").textContent = run.unbanked;
 
   // hero tableau
+  $("#hero-art").textContent = run.classId ? CLASSES[run.classId].art : "🛡️";
   $("#hp-num").textContent = g.hp + " / " + g.maxHp;
   const fill = $("#hp-fill");
   fill.style.width = (100 * g.hp / g.maxHp) + "%";
@@ -668,7 +781,8 @@ function render() {
     const b = document.createElement("button");
     b.className = "card " + k
       + (k === "enemy" && c.r === 14 ? " boss" : "")
-      + (prevIds.has(cid(c)) ? "" : " enter");
+      + (prevIds.has(cid(c)) ? "" : " enter")
+      + (driftPicks.some((p) => same(p, c)) ? " selected" : "");
     b.style.animationDelay = (i * 0.06) + "s";
     b.dataset.cid = cid(c);
     b.setAttribute("aria-label", cardName(c) + ", value " + c.r);
@@ -678,20 +792,178 @@ function render() {
       '<span class="art" aria-hidden="true">' + cardArt(c) + "</span>" +
       '<span class="num">' + c.r + "</span>" +
       '<span class="name">' + cardName(c) + "</span>";
-    b.addEventListener("click", () => openSheet(c));
+    b.addEventListener("click", () => {
+      if (mode === "drift") { toggleDriftPick(c, b); return; }
+      openSheet(c);
+    });
     room.appendChild(b);
   });
   prevIds = newIds;
 
+  renderAbilityBar();
+
   // flee
   const fleeBtn = $("#flee");
   const note = $("#flee-note");
-  fleeBtn.disabled = !canFlee(g);
+  fleeBtn.disabled = !canFlee(g) || mode !== null;
   note.textContent =
     g.status !== "playing" ? "" :
+    mode === "snipe" ? "Snipe armed — choose your single target." :
+    mode === "drift" ? "Smoke fills the room — swap out two cards." :
     g.fledLast ? "You fled the last room — stand and fight this one." :
     g.resolvedThisRoom > 0 ? "You have already acted — no escape now." :
     "Send all four cards to the bottom of the dungeon.";
+}
+
+/* ---------- class ability bar ---------- */
+function abilityUsable() {
+  if (!run.classId || run.charges <= 0 || g.status !== "playing") return false;
+  switch (run.classId) {
+    case "hunter": return g.room.length > 1;
+    case "drifter": return g.dungeon.length >= 2 && g.room.length >= 2;
+    case "mage": return g.discard.length > 0;
+    default: return true;
+  }
+}
+const BAR_CLASSES = { hunter: 1, drifter: 1, mage: 1 }; // triggered from the bar
+function renderAbilityBar() {
+  const bar = $("#ability-bar");
+  if (!run || !run.classId) { bar.hidden = true; return; }
+  bar.hidden = false;
+  const cls = CLASSES[run.classId];
+  $("#ability-pips").innerHTML =
+    "🃏".repeat(run.charges) + '<span class="spent">' + "🃏".repeat(MAX_CHARGES - run.charges) + "</span>";
+  let label = cls.ability, hint = "", actionable = false, armed = false;
+  if (mode === "snipe") {
+    label = "Snipe armed"; hint = "tap a card to resolve it · tap here to cancel";
+    actionable = true; armed = true;
+  } else if (mode === "drift") {
+    label = driftPicks.length === 2 ? "Confirm the swap" : "Swapping in: " + driftDrawn.map((x) => cardArt(x) + " " + x.r).join("  ");
+    hint = driftPicks.length === 2 ? "tap here to finish" : "pick " + (2 - driftPicks.length) + " room card" + (driftPicks.length === 1 ? "" : "s") + " to banish";
+    actionable = true; armed = true;
+  } else {
+    switch (run.classId) {
+      case "hunter":       hint = "resolve one card, banish the rest of the room"; actionable = abilityUsable(); break;
+      case "drifter":      hint = "draw 2 from the dungeon, swap out 2 room cards"; actionable = abilityUsable(); break;
+      case "mage":         hint = "raise a red card from the discard pile"; actionable = abilityUsable(); break;
+      case "thief":        hint = "knife throw — offered when you fight"; break;
+      case "warrior":      hint = "flawless blow — offered when you strike"; break;
+      case "priestess":    hint = "healing magic — offered on a room's second elixir"; break;
+      case "dragonslayer": hint = "grit — offered when you fight"; break;
+      case "phoenix":      hint = "rebirth — automatic at 0 health"; break;
+    }
+    label = cls.name + " · " + cls.ability;
+  }
+  $("#ability-label").textContent = label;
+  $("#ability-hint").textContent = hint;
+  bar.classList.toggle("armed", armed);
+  bar.classList.toggle("unavail", !!BAR_CLASSES[run.classId] && !actionable && mode === null);
+  bar.disabled = !actionable;
+}
+$("#ability-bar").addEventListener("click", () => {
+  if (!run || !run.classId) return;
+  if (mode === "snipe") { mode = null; render(); return; }
+  if (mode === "drift") { if (driftPicks.length === 2) executeDrift(); return; }
+  if (!abilityUsable()) return;
+  SFX.tap();
+  if (run.classId === "hunter") { mode = "snipe"; render(); }
+  else if (run.classId === "drifter") startDrift();
+  else if (run.classId === "mage") castNecromancy();
+});
+
+/* Hunter — executed inside act() when mode === "snipe" */
+
+/* Drifter */
+function startDrift() {
+  run.charges--;
+  mode = "drift";
+  driftDrawn = g.dungeon.splice(0, 2);
+  driftPicks = [];
+  SFX.whoosh();
+  render();
+}
+function toggleDriftPick(c, el) {
+  const i = driftPicks.findIndex((p) => same(p, c));
+  if (i >= 0) { driftPicks.splice(i, 1); el.classList.remove("selected"); }
+  else if (driftPicks.length < 2) { driftPicks.push(c); el.classList.add("selected"); }
+  renderAbilityBar();
+}
+function executeDrift() {
+  driftPicks.forEach((pick, i) => {
+    const idx = g.room.findIndex((x) => same(x, pick));
+    g.dungeon.push(g.room[idx]);
+    g.room[idx] = driftDrawn[i];
+  });
+  driftDrawn = null; driftPicks = []; mode = null;
+  SFX.whoosh();
+  floatText("swapped", "gold");
+  render();
+}
+
+/* Mage */
+function castNecromancy() {
+  run.charges--;
+  SFX.magic();
+  const pool = g.discard.filter((c) => !(g.weapon && same(c, g.weapon))); // the held weapon isn't in the pile
+  const arr = pool.slice();
+  shuffleWith(arr, run.rngNext);
+  showMageSheet(arr.slice(0, 6));
+  render();
+}
+function showMageSheet(six) {
+  const sheet = $("#sheet");
+  sheet.innerHTML = "";
+  const h = document.createElement("h3");
+  h.innerHTML = '<span class="h-art" aria-hidden="true">🔮</span>Necromancy <span class="dim">— choose a red card</span>';
+  sheet.appendChild(h);
+  let anyRed = false;
+  six.forEach((c) => {
+    const k = kindOf(c);
+    if (k === "weapon") {
+      anyRed = true;
+      sheet.appendChild(sheetOption({
+        title: "Raise the " + cardName(c) + " (" + c.r + "♦)",
+        sub: g.weapon ? "replaces the " + cardName(g.weapon) + " (" + g.weapon.r + ") · fresh edge" : "a blade returns to your hand",
+        classAct: true,
+        onPick: () => {
+          g.weapon = c; g.weaponLimit = null;
+          closeSheet(); SFX.equip(); floatText("armed", "steel"); render();
+        },
+      }));
+    } else if (k === "elixir") {
+      anyRed = true;
+      const healed = g.elixirDrunk ? 0 : Math.min(g.maxHp - g.hp, c.r);
+      sheet.appendChild(sheetOption({
+        title: "Raise the " + cardName(c) + " (" + c.r + "♥)",
+        sub: g.elixirDrunk ? "no effect — you already drank in this room"
+           : healed === 0 ? "no effect — your health is already full"
+           : "restore " + healed + " health",
+        classAct: true,
+        onPick: () => {
+          let n = 0;
+          if (!g.elixirDrunk) { n = Math.min(g.maxHp - g.hp, c.r); g.hp += n; g.elixirDrunk = true; }
+          closeSheet(); SFX.heal(); healPulse();
+          floatText(n > 0 ? "+" + n : "wasted", "verd"); render();
+        },
+      }));
+    } else {
+      sheet.appendChild(sheetOption({
+        title: cardName(c) + " (" + fmt(c) + ")",
+        sub: "the dead offer no aid",
+        disabled: true,
+      }));
+    }
+  });
+  if (!anyRed) {
+    sheet.appendChild(sheetOption({ title: "Only monsters answered", sub: "the joker is spent — nothing happens", disabled: true }));
+  }
+  const cancel = document.createElement("button");
+  cancel.className = "act cancel";
+  cancel.innerHTML = '<span class="t">' + (anyRed ? "Take nothing" : "So be it") + "</span>";
+  cancel.addEventListener("click", closeSheet);
+  sheet.appendChild(cancel);
+  $("#backdrop").classList.add("open");
+  sheet.classList.add("open");
 }
 
 function floatText(text, tone) {
@@ -704,7 +976,7 @@ function floatText(text, tone) {
 function painFlash() {
   const p = $("#pain");
   p.classList.remove("on");
-  void p.offsetWidth; // restart animation
+  void p.offsetWidth;
   p.classList.add("on");
 }
 function shakeScreen(big) {
@@ -721,14 +993,16 @@ function healPulse() {
 }
 
 /* ---------- action sheet ---------- */
-function sheetOption({ title, sub, lethal, disabled, onPick }) {
+function sheetOption({ title, sub, lethal, disabled, classAct, onPick }) {
   const b = document.createElement("button");
-  b.className = "act" + (lethal ? " lethal" : "");
+  b.className = "act" + (lethal ? " lethal" : "") + (classAct ? " classact" : "");
   b.disabled = !!disabled;
   b.innerHTML = '<span class="t">' + title + '</span><span class="sub">' + sub + "</span>";
   if (onPick) b.addEventListener("click", onPick);
   return b;
 }
+function deathNote(dmg) { return dmg >= g.hp ? " — you will die" : ""; }
+
 function openSheet(c) {
   if (g.status !== "playing") return;
   SFX.tap();
@@ -737,18 +1011,21 @@ function openSheet(c) {
   const k = kindOf(c);
   const h = document.createElement("h3");
   const art = '<span class="h-art" aria-hidden="true">' + cardArt(c) + "</span>";
+  const cls = run.classId;
+  const hasCharge = run.charges > 0;
 
   if (k === "enemy") {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— strength ' + c.r + "</span>";
+    h.innerHTML = art + cardName(c) + ' <span class="dim">— strength ' + c.r +
+      (mode === "snipe" ? " · sniping" : "") + "</span>";
     sheet.appendChild(h);
+
     if (g.weapon) {
       if (canUseWeapon(g, c)) {
         const dmg = previewDamage(g, c, true);
         sheet.appendChild(sheetOption({
           title: "Strike with the " + cardName(g.weapon) + " (" + g.weapon.r + ")",
           sub: (dmg > 0 ? "take " + dmg + " damage" : "take no damage") +
-               " · blade dulls to ≤ " + c.r +
-               (dmg >= g.hp ? " — you will die" : ""),
+               " · blade dulls to ≤ " + c.r + deathNote(dmg),
           lethal: dmg >= g.hp,
           onPick: () => act(c, () => {
             const taken = fight(g, c, true);
@@ -757,6 +1034,42 @@ function openSheet(c) {
               : { label: "blocked", tone: "steel", hit: true, sound: "slash" };
           }),
         }));
+        if (cls === "warrior" && hasCharge) {
+          sheet.appendChild(sheetOption({
+            title: "Flawless Blow 🃏",
+            sub: (dmg > 0 ? "take " + dmg + " damage" : "take no damage") +
+                 " · the blade stays sharp" + deathNote(dmg),
+            lethal: dmg >= g.hp, classAct: true,
+            onPick: () => act(c, () => {
+              run.charges--;
+              takeFromRoom(g, c);
+              const taken = Math.max(0, c.r - g.weapon.r); // no degradation
+              g.hp = Math.max(0, g.hp - taken);
+              resolveCard(g, c);
+              return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 };
+            }),
+          }));
+        }
+        if (cls === "dragonslayer" && hasCharge) {
+          const gd = Math.max(0, c.r - g.weapon.r - 5);
+          sheet.appendChild(sheetOption({
+            title: "Strike with Grit 🃏",
+            sub: (gd > 0 ? "take " + gd + " damage" : "take no damage") +
+                 " · +5 defense · blade dulls to ≤ " + c.r + deathNote(gd),
+            lethal: gd >= g.hp, classAct: true,
+            onPick: () => act(c, () => {
+              run.charges--;
+              takeFromRoom(g, c);
+              const taken = Math.max(0, c.r - g.weapon.r - 5);
+              g.weaponLimit = c.r;
+              g.hp = Math.max(0, g.hp - taken);
+              resolveCard(g, c);
+              return taken > 0
+                ? { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 }
+                : { label: "blocked", tone: "steel", hit: true, sound: "slash" };
+            }),
+          }));
+        }
       } else {
         sheet.appendChild(sheetOption({
           title: cardName(g.weapon) + " is too dull",
@@ -764,19 +1077,55 @@ function openSheet(c) {
           disabled: true,
         }));
       }
+      if (cls === "thief" && hasCharge) {
+        const td = Math.max(0, c.r - g.weapon.r);
+        sheet.appendChild(sheetOption({
+          title: "Knife Throw 🃏",
+          sub: (td > 0 ? "take " + td + " damage" : "take no damage") +
+               " · ignores dullness · the weapon is lost" + deathNote(td),
+          lethal: td >= g.hp, classAct: true,
+          onPick: () => act(c, () => {
+            run.charges--;
+            takeFromRoom(g, c);
+            const taken = Math.max(0, c.r - g.weapon.r);
+            g.weapon = null; g.weaponLimit = null;
+            g.hp = Math.max(0, g.hp - taken);
+            resolveCard(g, c);
+            return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "slash", buzz: 50 };
+          }),
+        }));
+      }
     }
+
     const bare = previewDamage(g, c, false);
     sheet.appendChild(sheetOption({
       title: "Fight bare-handed",
-      sub: "take " + bare + " damage" + (bare >= g.hp ? " — you will die" : ""),
+      sub: "take " + bare + " damage" + deathNote(bare),
       lethal: bare >= g.hp,
       onPick: () => act(c, () => {
         const taken = fight(g, c, false);
         return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "thud", buzz: taken >= 8 ? 90 : 50 };
       }),
     }));
+    if (cls === "dragonslayer" && hasCharge) {
+      const gb = Math.max(0, c.r - 5);
+      sheet.appendChild(sheetOption({
+        title: "Bare-handed with Grit 🃏",
+        sub: (gb > 0 ? "take " + gb + " damage" : "take no damage") + " · +5 defense" + deathNote(gb),
+        lethal: gb >= g.hp, classAct: true,
+        onPick: () => act(c, () => {
+          run.charges--;
+          takeFromRoom(g, c);
+          const taken = Math.max(0, c.r - 5);
+          g.hp = Math.max(0, g.hp - taken);
+          resolveCard(g, c);
+          return { label: "−" + taken, tone: "ember", hit: true, pain: taken, sound: "thud", buzz: 50 };
+        }),
+      }));
+    }
   } else if (k === "weapon") {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— power ' + c.r + "</span>";
+    h.innerHTML = art + cardName(c) + ' <span class="dim">— power ' + c.r +
+      (mode === "snipe" ? " · sniping" : "") + "</span>";
     sheet.appendChild(h);
     sheet.appendChild(sheetOption({
       title: "Take up the " + cardName(c),
@@ -785,7 +1134,8 @@ function openSheet(c) {
       onPick: () => act(c, () => { equip(g, c); return { label: "armed", tone: "steel", sound: "equip" }; }),
     }));
   } else {
-    h.innerHTML = art + cardName(c) + ' <span class="dim">— restores ' + c.r + "</span>";
+    h.innerHTML = art + cardName(c) + ' <span class="dim">— restores ' + c.r +
+      (mode === "snipe" ? " · sniping" : "") + "</span>";
     sheet.appendChild(h);
     const healed = g.elixirDrunk ? 0 : Math.min(g.maxHp - g.hp, c.r);
     sheet.appendChild(sheetOption({
@@ -799,6 +1149,23 @@ function openSheet(c) {
                      : { label: "wasted", tone: "verd", sound: "tap" };
       }),
     }));
+    if (cls === "priestess" && hasCharge && g.elixirDrunk) {
+      const magicHeal = Math.min(g.maxHp - g.hp, c.r);
+      sheet.appendChild(sheetOption({
+        title: "Drink with Healing Magic 🃏",
+        sub: magicHeal > 0 ? "a second blessing · restore " + magicHeal + " health"
+                           : "no effect — your health is already full",
+        classAct: true,
+        onPick: () => act(c, () => {
+          run.charges--;
+          takeFromRoom(g, c);
+          const n = Math.min(g.maxHp - g.hp, c.r);
+          g.hp += n;
+          resolveCard(g, c);
+          return { label: n > 0 ? "+" + n : "wasted", tone: "verd", heal: true, sound: "heal", buzz: 15 };
+        }),
+      }));
+    }
   }
 
   const cancel = document.createElement("button");
@@ -817,13 +1184,47 @@ function closeSheet() {
 $("#backdrop").addEventListener("click", closeSheet);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
 
-/* act() runs an engine action synchronously, then choreographs the result:
-   the struck card flashes, the screen shakes with the damage, the hero slab
-   pulses on heals — and only then does the room re-render. */
+/* act() runs an engine action synchronously, then choreographs the result.
+   The class layer hooks in here: Snipe isolates the target before the action
+   and banishes the rest after; the Phoenix rewinds a death once. */
 function act(card, mutate) {
+  let sniped = null;
+  if (mode === "snipe" && card) {
+    run.charges--;
+    mode = null;
+    sniped = g.room.filter((x) => !same(x, card));
+    g.room.length = 0;
+    g.room.push(card);
+  }
+
   let fx;
-  try { fx = mutate(); } catch (err) { closeSheet(); return; }
+  try { fx = mutate(); } catch (err) {
+    if (sniped) { g.room.push(...sniped); run.charges++; } // undo an illegal snipe
+    closeSheet(); render(); return;
+  }
   closeSheet();
+
+  if (sniped && sniped.length) {
+    if (g.status === "won") g.status = "playing"; // room wasn't really empty
+    if (g.status === "lost") {
+      g.room.push(...sniped); // died mid-snipe: the rest were still in the room
+    } else {
+      g.dungeon.push(...sniped);
+      deal(g, false); // a fresh room; not a retreat
+    }
+  }
+
+  let reborn = false;
+  if (g.status === "lost" && run.classId === "phoenix" && run.charges > 0) {
+    run.charges--;
+    g.hp = 1;
+    g.status = "playing";
+    reborn = true;
+    // redo the post-resolution bookkeeping the death short-circuited
+    if (g.room.length === 0 && g.dungeon.length === 0) g.status = "won";
+    else if (g.room.length === 1 && g.dungeon.length > 0) deal(g, false);
+  }
+
   const el = card ? $('#room [data-cid="' + cid(card) + '"]') : null;
   if (el) el.classList.add(fx.hit ? "hit" : "resolve");
   if (fx.sound && SFX[fx.sound]) SFX[fx.sound]();
@@ -831,6 +1232,7 @@ function act(card, mutate) {
   if (fx.heal) healPulse();
   if (fx.buzz) buzz(fx.buzz);
   floatText(fx.label, fx.tone);
+  if (reborn) setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); healPulse(); }, 380);
 
   const roomEl = $("#room");
   roomEl.style.pointerEvents = "none";
@@ -843,7 +1245,7 @@ function act(card, mutate) {
 }
 
 $("#flee").addEventListener("click", () => {
-  if (!canFlee(g)) return;
+  if (!canFlee(g) || mode !== null) return;
   flee(g); // engine first — state is authoritative immediately
   $("#flee").disabled = true; // reflect it before the animation finishes
   SFX.whoosh();
@@ -855,6 +1257,49 @@ $("#flee").addEventListener("click", () => {
 });
 
 /* ---------- overlays ---------- */
+function openClassPick(seed) {
+  pendingSeed = seed;
+  const grid = $("#class-grid");
+  grid.innerHTML = "";
+  Object.keys(CLASSES).forEach((id) => {
+    const c = CLASSES[id];
+    const b = document.createElement("button");
+    b.className = "class-opt";
+    b.dataset.class = id;
+    b.innerHTML =
+      '<span class="c-art" aria-hidden="true">' + c.art + '</span>' +
+      '<span class="c-body"><span class="c-name">' + c.name + '</span>' +
+      '<span class="c-card">' + c.card + " · " + c.ability + '</span>' +
+      '<span class="c-blurb">' + c.blurb + "</span></span>";
+    b.addEventListener("click", () => { SFX.tap(); startRun(pendingSeed, id); });
+    grid.appendChild(b);
+  });
+  const rand = document.createElement("button");
+  rand.className = "class-opt wide";
+  rand.dataset.class = "random";
+  rand.innerHTML = '<span class="c-art" aria-hidden="true">🃏</span>' +
+    '<span class="c-body"><span class="c-name">Fate Decides</span>' +
+    '<span class="c-blurb">shuffle the class cards and draw one at random</span></span>';
+  rand.addEventListener("click", () => {
+    SFX.tap();
+    const keys = Object.keys(CLASSES);
+    startRun(pendingSeed, keys[Math.floor(Math.random() * keys.length)]);
+  });
+  grid.appendChild(rand);
+  const none = document.createElement("button");
+  none.className = "class-opt wide";
+  none.dataset.class = "none";
+  none.innerHTML = '<span class="c-art" aria-hidden="true">🕯️</span>' +
+    '<span class="c-body"><span class="c-name">Classless</span>' +
+    '<span class="c-blurb">the pure descent — no abilities, no jokers</span></span>';
+  none.addEventListener("click", () => { SFX.tap(); startRun(pendingSeed, null); });
+  grid.appendChild(none);
+
+  $("#start").classList.remove("open");
+  $("#end").classList.remove("open");
+  $("#classpick").classList.add("open");
+}
+
 function showFloorClear() {
   const floorScore = score(g);
   const mult = multFor(run.floor);
@@ -869,7 +1314,8 @@ function showFloorClear() {
   $("#fc-health").textContent =
     "You stand at " + g.hp + " health" +
     (g.weapon ? ", " + cardName(g.weapon) + " in hand" +
-      (g.weaponLimit !== null ? " (dulled to ≤ " + g.weaponLimit + ")" : "") : ", bare-handed") + ".";
+      (g.weaponLimit !== null ? " (dulled to ≤ " + g.weaponLimit + ")" : "") : ", bare-handed") +
+    (run.classId ? ", " + run.charges + " joker" + (run.charges === 1 ? "" : "s") + " left" : "") + ".";
   $("#btn-descend").textContent = "Descend — floor " + (run.floor + 1) + " pays ×" + multFor(run.floor + 1);
   $("#btn-retreat").textContent = "Retreat with " + run.unbanked + " gold";
   $("#floorclear").classList.add("open");
@@ -898,11 +1344,11 @@ function finishRun(retreated) {
   if (retreated) SFX.coin();
 }
 
-$("#btn-new").addEventListener("click", () => { SFX.tap(); startRun(randomSeed()); });
-$("#btn-again").addEventListener("click", () => { SFX.tap(); startRun(randomSeed()); });
-$("#btn-retry").addEventListener("click", () => { SFX.tap(); startRun(seedStr); });
-$("#btn-daily").addEventListener("click", () => { SFX.tap(); startRun(dailySeed()); });
-$("#btn-daily2").addEventListener("click", () => { SFX.tap(); startRun(dailySeed()); });
+$("#btn-new").addEventListener("click", () => { SFX.tap(); openClassPick(randomSeed()); });
+$("#btn-again").addEventListener("click", () => { SFX.tap(); openClassPick(randomSeed()); });
+$("#btn-retry").addEventListener("click", () => { SFX.tap(); startRun(seedStr, lastClassId); });
+$("#btn-daily").addEventListener("click", () => { SFX.tap(); openClassPick(dailySeed()); });
+$("#btn-daily2").addEventListener("click", () => { SFX.tap(); openClassPick(dailySeed()); });
 $("#btn-descend").addEventListener("click", descend);
 $("#btn-retreat").addEventListener("click", () => finishRun(true));
 $("#btn-daily").textContent = "Daily Dungeon · " + dailyLabel();
@@ -948,7 +1394,7 @@ $("#mute").addEventListener("click", () => { $("#mute").textContent = SFX.toggle
    ================================================================ */
 window.__scroundel = {
   deckForSeed: (s) => { const d = createDungeon(); shuffle(d, BigInt(s)); return d.map(fmt).join(","); },
-  start: (s) => startRun(s),
+  start: (s, cls) => startRun(s, cls || null),
   state: () => g,
   run: () => run,
   render: () => render(),
