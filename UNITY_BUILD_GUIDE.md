@@ -30,18 +30,38 @@ You're pressing Play, not building from scratch.
 
 ## 2. Open this repo as a Unity project
 
-Unity projects need a couple of folders (`ProjectSettings/`, `Packages/`)
-that don't exist in this repo yet — they're auto-generated on first open and
-are machine/version-specific, so they're intentionally not checked in.
+The repo has `ProjectSettings/ProjectVersion.txt` and `Packages/manifest.json`
+checked in — the two files Unity Hub itself writes when it creates a new
+project — so Hub will recognize this folder as a real Unity project. (If
+you've pulled an older copy of the branch without these, `git pull` first —
+without them, Hub's project list won't show the folder at all, which is the
+"No Unity projects found" error some tooling reports.)
+
+Everything else Unity normally generates on first launch — `Library/`
+(its asset cache), the rest of `ProjectSettings/*.asset`, editor layout,
+etc. — is intentionally still absent; those are machine/version-specific
+and Unity fills them in automatically the first time it opens the project,
+the same way it would for a brand-new one.
 
 1. In Unity Hub: **Projects → Open → Add project from disk**, and select the
-   root of this repo (the folder containing `Assets/`).
-2. Unity Hub may ask you to confirm the Editor version — pick the 2022 LTS
-   you installed.
+   root of this repo (the folder containing `Assets/`, `ProjectSettings/`,
+   and `Packages/`).
+2. Unity Hub will likely flag a version mismatch (the checked-in
+   `ProjectVersion.txt` names `2022.3.50f1`, a placeholder — it almost
+   certainly won't exactly match whatever patch you installed). That's
+   fine: pick **"Open with [your installed 2022.3.x version]"** or similar —
+   any 2022 LTS patch works, this project uses no version-specific features.
 3. Click to open it. **First open takes a few minutes** — Unity is
-   generating `Library/` (its asset cache) and importing everything under
-   `Assets/`.
-4. If the Editor asks about **Input Handling** (a startup dialog on some
+   generating `Library/`, resolving the packages in `manifest.json`, and
+   importing everything under `Assets/`.
+4. If **Package Manager** flags any single package version as unresolvable
+   (rare, but package versions do drift over time), open
+   `Packages/manifest.json` in a text editor and delete the version number
+   after the colon for that one line, leaving just `"com.unity.xxx": ""` —
+   Unity will resolve it to whatever's actually available. The
+   `com.unity.modules.*` entries can't fail this way; they ship with the
+   Editor itself, not fetched from a registry.
+5. If the Editor asks about **Input Handling** (a startup dialog on some
    versions), choose **"Both"** — the game uses the classic UI input module,
    and picking "Input System Package (New)" only would silently break clicks.
    You can also set this later at **Edit → Project Settings → Player →
