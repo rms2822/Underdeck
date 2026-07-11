@@ -23,17 +23,24 @@ Phoenix Feather relic.
 
 ## What exists right now
 
-The **pure-C# rules engine + full unit-test suite** (Phase 0 of the plan):
+Two parallel C# modules under `Assets/Scripts/`, both pure engine + tests
+(no UnityEngine dependency), plus a working Unity UI for UNDERDECK:
 
 ```
-Assets/Scripts/Core/        # engine — no UnityEngine dependency, seedable RNG
-  Card.cs                   #   suits/ranks → Enemy / Weapon / Elixir
-  Deck.cs, Rng.cs           #   canonical 44-card dungeon, deterministic shuffle
-  GameState.cs              #   authoritative run state (read-only for UI)
-  Rules.cs                  #   combat, degradation, rooms, flee, elixirs
-  RunResult.cs              #   scoring
-Assets/Scripts/Tests/Core/  # NUnit tests — run in Unity's Test Runner AND headless
-CoreTests/                  # dotnet harness that compiles the same files
+Assets/Scripts/Core/
+  (Card/Deck/GameState/Rules/RunResult.cs)  # classic-Scoundrel engine (earlier prototype)
+  Underdeck/                                # UNDERDECK engine — the current game
+    Content.cs         #   monsters, weapons, relics, skills, bosses — exact JS-parity data
+    Models.cs           #   Card, enums, result structs
+    Rng.cs               #   SplitMix64, matches the JS engine bit-for-bit
+    DeckBuilder.cs       #   per-depth dungeon construction
+    RunState.cs          #   the authoritative mutable run state
+    GameEngine.cs(.Skills/.Shop)  # the full ruleset — combat, rooms, skills, shop, bosses
+Assets/Scripts/Tests/Underdeck/   # 81 NUnit tests incl. cross-engine parity vs. the JS prototype
+Assets/Scripts/Presentation/      # a complete, playable Unity UI (procedural uGUI, no scenes/art needed)
+  GameBootstrap.cs      #   every screen: title, room, sheets, boss, shop, end
+  UIFactory.cs           #   runtime UI-building helpers
+CoreTests/                # dotnet harness — compiles and runs ALL Core+Tests headless
 ```
 
 ## Running the tests (no Unity needed)
@@ -42,29 +49,31 @@ CoreTests/                  # dotnet harness that compiles the same files
 dotnet test CoreTests
 ```
 
-Covers deck composition, combat math, weapon degradation, room flow
-("resolve 3, carry 1"), flee rules, the one-elixir-per-room rule, scoring,
-and 100-seed full-game simulations that verify termination, card conservation,
-and cross-run determinism (the foundation for daily challenges).
+125 tests total. The Underdeck suite covers deck composition per depth,
+combat math, the equal-or-lower weapon-dulling rule, all 15 skills, curses,
+elites, all three bosses, the shop economy, scoring, and 100-seed
+full-run bot simulations — plus a **cross-engine parity check** asserting
+the C# port produces byte-identical dungeons and starter-deck shuffles to
+`prototype/index.html`'s JS engine for fixed seeds.
 
-## Opening in Unity
+## Building in Unity
 
-1. Install **Unity 2022 LTS** (or newer LTS) with iOS + Android build support.
-2. In Unity Hub: **Add → this repository folder**, then open. Unity generates
-   `ProjectSettings/`, `Packages/`, and `.meta` files on first import —
-   commit those.
-3. The asmdefs are already in place: `Scroundel.Core` (engine,
-   `noEngineReferences`) and `Scroundel.Core.Tests` (Editor-only, NUnit).
-   Run the suite via **Window → General → Test Runner → EditMode**.
-4. Set the project to **2D (URP)**, portrait orientation, per GAME_PLAN §5.1.
+**📋 See [`UNITY_BUILD_GUIDE.md`](UNITY_BUILD_GUIDE.md) for the full
+step-by-step walkthrough** — installing Unity, opening this repo as a
+project, pressing Play, and building to an Android phone (or iOS from a
+Mac). Short version: open the repo in Unity Hub, add an empty GameObject
+with the `GameBootstrap` component to a new scene, press Play — the entire
+game builds its own UI at runtime.
 
 ## Architecture rules of the road
 
-- **All game logic lives in `Core/`** and is mutated only through `Rules`
-  methods. Presentation reads `GameState` and calls `Rules`; it never writes.
+- **All game logic lives in `Core/`** and is mutated only through
+  `GameEngine`/`Rules` methods. Presentation reads state and calls engine
+  methods; it never writes state directly.
 - **Determinism is sacred:** same seed ⇒ same dungeon ⇒ same outcome for the
   same inputs. Never introduce `System.Random` or frame-dependent logic into
   `Core/`.
-- New mechanics (GAME_PLAN §3.5) must pass the three gates: one-sentence
-  explainable, visible in the combat preview, and layered as data-driven
-  modifiers — never special cases inside `Rules.cs`.
+- The web prototype (`prototype/index.html`) is the reference implementation
+  for UNDERDECK — when the two disagree, treat it as a bug in whichever side
+  is wrong, not an intentional divergence (three small, explicitly-documented
+  rule fixes aside — see the class doc comment on `GameEngine.cs`).

@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <Compile Include="../Assets/Scripts/Core/**/*.cs" LinkBase="Core" />
-    <Compile Include="../Assets/Scripts/Tests/Core/**/*.cs" LinkBase="Tests" />
+    <Compile Include="../Assets/Scripts/Tests/**/*.cs" LinkBase="Tests" />
   </ItemGroup>
 
   <ItemGroup>
