@@ -14,7 +14,7 @@ systems) and remains useful background.
 `prototype/index.html` is the **UNDERDECK vertical slice** as a self-contained
 web build — open it in any browser, no server needed. It implements the GDD's
 core: the 3-of-4 room loop with strictly-lower weapon dulling, a Wanderer
-skill deck (hand of 3, 2 Focus per room), 8 rule-breaking relics, kit weapons
+skill deck (hand of 2, free to play), 7 rule-breaking relics, kit weapons
 with specials, gold/treasure economy with loot-cache drafts, 3 Depths
 (curses in II, elites in III) each capped by a boss, between-depth shops with
 deck-thinning, GDD scoring, and a seeded Daily Descent. The Red Court class

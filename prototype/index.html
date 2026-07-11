@@ -225,10 +225,7 @@
   .badge.small { width: 21px; height: 21px; font-size: 11px; }
 
   #statline { display: flex; justify-content: center; align-items: center; gap: 16px; font-family: var(--mono); font-size: 12px; padding: 2px 0; }
-  #focus-pips { letter-spacing: .12em; color: var(--gold); font-size: 13px; }
-  #focus-pips .off { color: var(--bone-faint); }
   #gold-line { color: var(--gold); }
-  #bloodpact-btn { font-family: var(--mono); font-size: 10px; color: var(--blood); border: 1px solid rgba(192,52,52,.5); border-radius: 6px; padding: 2px 7px; }
 
   /* ============ skill hand ============ */
   #handrow { display: flex; gap: 8px; align-items: stretch; padding: 4px 0 0; }
@@ -300,6 +297,8 @@
   .shoprow .s-icon { font-size: 22px; filter: saturate(.85); }
   .shoprow .s-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .shoprow .price { font-family: var(--mono); font-size: 12px; color: var(--gold); white-space: nowrap; }
+  .descend-summary { font-family: var(--mono); font-size: 11px; color: var(--bone-dim); text-align: center; margin-bottom: 8px; }
+  .sheet-footer .cta { width: 100%; }
 
   /* ============ overlays ============ */
   .overlay {
@@ -428,8 +427,6 @@
   </div>
 
   <div id="statline">
-    <span id="focus-pips"></span>
-    <button id="bloodpact-btn" hidden>+1 ◆ for 2 ♥</button>
     <span id="gold-line">🪙 0</span>
   </div>
 
@@ -548,26 +545,25 @@ const RELICS = {
   glasssigil:  { name: "Glass Sigil",     art: "💎", text: "Gold gains doubled. Max health becomes 12.", price: 8 },
   gravebind:   { name: "Gravebind",       art: "⛓️", text: "Every 5th slain monster returns as a Revenant skill.", price: 11 },
   torchbearer: { name: "Torchbearer",     art: "🕯️", text: "The top card of the dungeon is always revealed.", price: 9 },
-  bloodpact:   { name: "Bloodpact",       art: "🩸", text: "Trade 2 health for 1 focus.", price: 10 },
   phoenix:     { name: "Phoenix Feather", art: "🪶", text: "Once per run, survive death at 1 health.", price: 13 },
 };
 const SKILLS = {
-  strike:     { name: "Strike",        cost: 0, art: "⚔️", text: "+3 power on your next fight this room." },
-  guard:      { name: "Guard",         cost: 1, art: "🛡️", text: "Block the next 4 damage this room." },
-  scout:      { name: "Scout",         cost: 1, art: "👁️", text: "Peek the top 2 dungeon cards; you may swap them." },
-  slip:       { name: "Slip",          cost: 0, art: "💨", text: "This room you may flee, even after fleeing." },
-  bash:       { name: "Bash",          cost: 1, art: "💥", text: "Slay a monster of threat 6 or less." },
-  mend:       { name: "Mend",          cost: 1, art: "🌿", text: "Heal 3." },
-  pickpocket: { name: "Pickpocket",    cost: 0, art: "💰", text: "Gain 4 gold." },
-  preserve:   { name: "Preserve",      cost: 1, art: "🧿", text: "Your next weapon kill doesn't dull the blade." },
-  sharpen:    { name: "Sharpen",       cost: 1, art: "⚒️", text: "Restore your weapon to a keen edge — undo all dulling." },
-  snipe:      { name: "Snipe",         cost: 1, art: "🏹", text: "Resolve one card; banish the rest of the room to the bottom." },
-  knifethrow: { name: "Knife Throw",   cost: 1, art: "🔪", text: "Fight a monster ignoring dullness; the weapon is lost." },
-  grit:       { name: "Grit",          cost: 1, art: "🐲", text: "+5 defense on your next fight this room." },
-  chalice:    { name: "Second Chalice",cost: 1, art: "✨", text: "You may drink a second potion this room." },
-  smokebomb:  { name: "Smoke Bomb",    cost: 2, art: "💣", text: "Swap two room cards with the top two of the dungeon." },
-  necromancy: { name: "Necromancy",    cost: 2, art: "🔮", text: "Unearth 6 discarded cards; claim one red." },
-  revenant:   { name: "Revenant",      cost: 1, art: "🦴", text: "Slay a monster of threat 8 or less." },
+  strike:     { name: "Strike",        art: "⚔️", text: "+3 power on your next fight this room." },
+  guard:      { name: "Guard",         art: "🛡️", text: "Block the next 4 damage this room." },
+  scout:      { name: "Scout",         art: "👁️", text: "Peek the top 2 dungeon cards; you may swap them." },
+  slip:       { name: "Slip",          art: "💨", text: "This room you may flee, even after fleeing." },
+  bash:       { name: "Bash",          art: "💥", text: "Slay a monster of threat 6 or less." },
+  mend:       { name: "Mend",          art: "🌿", text: "Heal 3." },
+  pickpocket: { name: "Pickpocket",    art: "💰", text: "Gain 4 gold." },
+  preserve:   { name: "Preserve",      art: "🧿", text: "Your next weapon kill doesn't dull the blade." },
+  sharpen:    { name: "Sharpen",       art: "⚒️", text: "Restore your weapon to a keen edge — undo all dulling." },
+  snipe:      { name: "Snipe",         art: "🏹", text: "Resolve one card; banish the rest of the room to the bottom." },
+  knifethrow: { name: "Knife Throw",   art: "🔪", text: "Fight a monster ignoring dullness; the weapon is lost." },
+  grit:       { name: "Grit",          art: "🐲", text: "+5 defense on your next fight this room." },
+  chalice:    { name: "Second Chalice",art: "✨", text: "You may drink a second potion this room." },
+  smokebomb:  { name: "Smoke Bomb",    art: "💣", text: "Swap two room cards with the top two of the dungeon." },
+  necromancy: { name: "Necromancy",    art: "🔮", text: "Unearth 6 discarded cards; claim one red." },
+  revenant:   { name: "Revenant",      art: "🦴", text: "Slay a monster of threat 8 or less." },
 };
 const STARTER_DECK = ["strike", "strike", "strike", "strike", "guard", "guard", "guard", "scout", "sharpen", "slip"];
 const DRAFT_POOL = ["bash", "mend", "pickpocket", "preserve", "sharpen", "snipe", "knifethrow", "grit", "chalice", "smokebomb", "necromancy", "strike", "guard"];
@@ -710,7 +706,7 @@ function newRun(seed) {
     deck: buildDepthDeck(1, BigInt(base)),
     room: [], discard: [],
     skills: { draw: STARTER_DECK.slice(), disc: [], hand: [] },
-    focus: 2, potionDrunk: false, secondPotion: false, fledLast: false, actedThisRoom: 0,
+    potionDrunk: false, secondPotion: false, fledLast: false, actedThisRoom: 0,
     strikeNext: 0, gritNext: 0, block: 0, preserveNext: false,
     slain: 0, graveTick: 0, bossesSlain: 0, removals: 0,
     boss: null,
@@ -725,14 +721,13 @@ function goldGain(n) { S.gold += hasRelic("glasssigil") ? n * 2 : n; }
 function drawHand() {
   S.skills.disc.push(...S.skills.hand);
   S.skills.hand = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 2; i++) {
     if (S.skills.draw.length === 0) {
       S.skills.draw = S.skills.disc; S.skills.disc = [];
       shuffleWith(S.skills.draw, S.rng);
     }
     if (S.skills.draw.length) S.skills.hand.push(S.skills.draw.shift());
   }
-  S.focus = 2;
   S.lockedIdx = -1;
 }
 function dealRoom(fled) {
@@ -1004,11 +999,7 @@ function render() {
     rk.innerHTML = '<span class="frame slot"></span><span class="kitline">no relics</span>';
   }
 
-  $("#focus-pips").innerHTML = "◆".repeat(S.focus) + '<span class="off">' + "◆".repeat(Math.max(0, 2 - S.focus)) + "</span>";
   $("#gold-line").textContent = "🪙 " + S.gold;
-  const bp = $("#bloodpact-btn");
-  bp.hidden = !(hasRelic("bloodpact") && S.phase !== "over");
-  bp.disabled = S.hp <= 2;
 
   // hand
   const hand = $("#handrow");
@@ -1018,12 +1009,12 @@ function render() {
     const locked = i === S.lockedIdx;
     const b = document.createElement("button");
     b.className = "skill" + (locked ? " locked" : "");
-    b.disabled = locked || S.focus < sk.cost || S.phase === "over";
+    b.disabled = locked || S.phase === "over";
     b.dataset.skill = id;
     b.innerHTML =
       '<span class="s-art">' + (locked ? "⛓️" : sk.art) + "</span>" +
       '<span class="s-name">' + sk.name + "</span>" +
-      '<span class="s-cost">' + (locked ? "locked" : sk.cost === 0 ? "free" : "◆".repeat(sk.cost)) + "</span>";
+      (locked ? '<span class="s-cost">locked</span>' : "");
     b.addEventListener("click", () => openSkillSheet(id, i));
     hand.appendChild(b);
   });
@@ -1308,7 +1299,6 @@ function openBossSheet() {
 /* ---------- skills ---------- */
 function spendSkill(idx) {
   const id = S.skills.hand[idx];
-  S.focus -= SKILLS[id].cost;
   S.skills.hand.splice(idx, 1);
   if (S.lockedIdx > idx) S.lockedIdx--;
   S.skills.disc.push(id);
@@ -1317,11 +1307,11 @@ function openSkillSheet(id, idx) {
   if (mode && mode.skillId === id) { mode = null; render(); return; }
   SFX.tap();
   const sk = SKILLS[id];
-  const sheet = sheetShell('<span class="h-art">' + sk.art + "</span>" + sk.name + ' <span class="dim">— ' + (sk.cost === 0 ? "free" : sk.cost + " ◆") + "</span>", sk.text);
+  const sheet = sheetShell('<span class="h-art">' + sk.art + "</span>" + sk.name, sk.text);
   const play = (after) => { spendSkill(idx); closeSheet(); after(); render(); };
   const needTargets = { bash: 1, revenant: 1, knifethrow: 1, snipe: 1, smokebomb: 1 };
-  let usable = S.focus >= sk.cost;
-  let why = "not enough focus";
+  let usable = true;
+  let why = "";
   if (usable) {
     if (id === "knifethrow" && !S.weapon) { usable = false; why = "you carry no weapon"; }
     if ((id === "bash" || id === "revenant") && !S.room.some((c) => c.kind === "monster" && threatOf(c) <= (id === "bash" ? 6 : 8)) && S.phase === "room") { usable = false; why = "no valid target in the room"; }
@@ -1479,7 +1469,7 @@ function showSkillDraft(done) {
   picks.forEach((id) => {
     const sk = SKILLS[id];
     sheet.appendChild(sheetOption({
-      title: sk.art + " " + sk.name + " (" + (sk.cost === 0 ? "free" : sk.cost + "◆") + ")",
+      title: sk.art + " " + sk.name,
       sub: sk.text, goldact: true,
       onPick: () => { S.skills.disc.push(id); closeSheet(); SFX.magic(); floatText(sk.art, "gold"); done(); },
     }));
@@ -1558,11 +1548,19 @@ function showShop(done) {
     rm.addEventListener("click", () => showRemoval(rp, () => rebuild()));
     scroll.appendChild(rm);
 
+    const footer = sheetFooter();
+    const summary = document.createElement("p");
+    summary.className = "descend-summary";
+    summary.innerHTML = "Carrying: " + (S.weapon ? S.weapon.art + " " + S.weapon.name : "no weapon") +
+      " · " + (S.relics.length ? S.relics.map((id) => RELICS[id].art).join(" ") : "no relics") +
+      " · 🪙 " + S.gold;
+    footer.appendChild(summary);
+
     const leave = document.createElement("button");
-    leave.className = "act cancel";
-    leave.innerHTML = '<span class="t">Descend to Depth ' + DEPTHS[Math.min(2, S.depth)].numeral + " →</span>";
+    leave.className = "cta";
+    leave.textContent = "Descend to Depth " + DEPTHS[Math.min(2, S.depth)].numeral + " →";
     leave.addEventListener("click", () => { closeSheet(); done(); });
-    sheetFooter().appendChild(leave);
+    footer.appendChild(leave);
 
     $("#backdrop").classList.add("open");
     $("#sheet").classList.add("open");
@@ -1643,12 +1641,6 @@ $("#btn-daily2").addEventListener("click", () => { SFX.tap(); startGame(dailySee
 $("#btn-daily").textContent = "Daily Descent · " + new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" });
 $("#mute").textContent = SFX.muted() ? "🔇" : "🔊";
 $("#mute").addEventListener("click", () => { $("#mute").textContent = SFX.toggle() ? "🔇" : "🔊"; });
-$("#bloodpact-btn").addEventListener("click", () => {
-  if (!hasRelic("bloodpact") || S.hp <= 2) return;
-  S.hp -= 2; S.focus += 1;
-  SFX.curse(); painFlash(); floatText("+◆", "gold");
-  render();
-});
 /* ================================================================
    TUTORIAL — a paged rule guide with real card visuals
    ================================================================ */
@@ -1664,8 +1656,7 @@ function tutSkill(id) {
   const sk = SKILLS[id];
   const d = document.createElement("div");
   d.className = "tut-mini-skill";
-  d.innerHTML = '<span class="s-art">' + sk.art + "</span><span class=\"s-name\">" + sk.name +
-    "</span><span class=\"s-cost\">" + (sk.cost === 0 ? "free" : "◆".repeat(sk.cost)) + "</span>";
+  d.innerHTML = '<span class="s-art">' + sk.art + "</span><span class=\"s-name\">" + sk.name + "</span>";
   return d;
 }
 function tutEmblem(n) {
@@ -1735,8 +1726,8 @@ const TUT = [
     ],
   },
   {
-    title: "Skills & Focus",
-    body: "Each room you draw a <b>hand of 3 skills</b> and get <b class='g'>2 ◆ focus</b> to spend. <b class='s'>Strike</b> sharpens a hit, <b class='s'>Guard</b> blocks damage, <b class='s'>Scout</b> peeks ahead. Draft more as you descend and your build comes alive.",
+    title: "Skills",
+    body: "Each room you draw a <b>hand of 2 skills</b>, free to play whenever they help. <b class='s'>Strike</b> sharpens a hit, <b class='s'>Guard</b> blocks damage, <b class='s'>Scout</b> peeks ahead. Draft more as you descend and your build comes alive.",
     stage: () => [tutSkill("strike"), tutSkill("guard"), tutSkill("scout")],
   },
   {
