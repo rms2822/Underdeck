@@ -259,13 +259,39 @@ effect on the card face before you commit. Nothing hidden, nothing un-previewabl
 1. **Reskin the prototype to swipe** (`prototype/index.html`): drag input, four
    meter bars, monster left/right onto the existing engine. Validate the *feel* —
    is one-thumb Scoundrel fun? This is the Phase-0 gate, reused.
+   **✅ Built as `prototype/swipe.html`** — swipe *and* tap controls, all four
+   meters, In The Dark + Panic phases, event cards, Descend-or-Climb-Out, Daily
+   Dungeon, and an interactive tutorial (§7.1). Playable in any browser.
 2. **Add Torch as the clock** (In The Dark phase). Retune floor length for the
-   ~5–10 min iOS session.
+   ~5–10 min iOS session. **✅ in the prototype** (~39-card floor).
 3. **Add Nerve + Panic.** Playtest that dread reads as tension, not noise.
+   **✅ in the prototype** (flinch timer on panicked fights).
 4. **Event/room cards + one floor theme** — the art & writing surface.
+   **✅ Merchant / Shrine / Cursed Chest** in the prototype.
 5. **Descend or Climb Out** — already spec'd and prototyped for #1; port it.
+   **✅ in the prototype.**
 6. **Port to Unity `Presentation/`** (GAME_PLAN §5.2) once the swipe feel is proven
    in web. Engine layer (`Core/`) crosses over unchanged.
+
+### 7.1 What the prototype already taught us
+
+Two findings from building `prototype/swipe.html`, both the kind of thing a
+Phase-0 prototype exists to surface:
+
+- **The swipe format has no *flee*, so the floor must be gentler than tabletop
+  Scoundrel.** Scoundrel's 26-enemy deck assumes you can dodge ~a quarter of it;
+  the swipe format resolves every card in draw order, so the full deck is
+  unsurvivable (0/200 seeds cleared in a headless bot). The prototype uses a
+  hand-tuned, enemy-lighter floor (14 enemies, richer weapons/elixirs, a
+  starting Dagger) that a middling bot clears **~25%** of the time — leaving
+  headroom for a skilled human and real "finish on 8 HP" tension. **Implication
+  for Unity:** the swipe mode needs its own floor-composition data, distinct
+  from the tap mode's canonical 44.
+- **Weapon degradation stays faithful *and* interesting in forced draw order.**
+  Because you can't reorder your weapon hits (no "pick 3 of 4"), degradation
+  becomes a live bet — *"is this monster big enough to spend my blade's edge on,
+  or do I take it barehanded and save the edge for something worse I can't see
+  yet?"* That preserves Scoundrel's central decision without modification.
 
 ---
 

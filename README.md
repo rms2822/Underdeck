@@ -9,14 +9,24 @@ monetization, and roadmap.
 
 ## Play it now
 
-`prototype/index.html` is the complete game as a self-contained web build —
-open it in any browser (phone or desktop, no server needed). It runs a
-line-for-line JavaScript port of the C# engine, verified to produce
-bit-identical dungeons and outcomes for the same seeds, and includes the
-Daily Dungeon (everyone gets the same date-seeded deck), best-hoard tracking,
-and the **Descend or Retreat** push-your-luck loop from GAME_PLAN §3.5: clear
-a floor, then bank your gold or descend to a fresh floor at a higher
-multiplier — dying salvages only 20% of the unbanked hoard. Use it for
+Two self-contained web builds — open either in any browser (phone or desktop,
+no server needed):
+
+- **`prototype/index.html`** — the **tap crawler** (Concept #1). A line-for-line
+  JavaScript port of the C# engine, verified to produce bit-identical dungeons
+  and outcomes for the same seeds. Includes the Daily Dungeon, best-hoard
+  tracking, and the **Descend or Retreat** push-your-luck loop from
+  GAME_PLAN §3.5.
+- **`prototype/swipe.html`** — the **swipe crawler** (Concept #2, see
+  [`SWIPE_CRAWLER_DESIGN.md`](SWIPE_CRAWLER_DESIGN.md)). One card at a time,
+  swipe (or tap) left/right, juggling four meters — Health, Torch, Nerve, Gold —
+  with the *In The Dark* and *Panic* pressure phases and a built-in interactive
+  **tutorial** ("Learn to Play"). Same Scoundrel combat math (barehanded vs.
+  degrading weapon), reshaped for one-thumb play.
+
+Both track the Daily Dungeon and best hoard, and share the **Descend or
+Retreat** loop: clear a floor, then bank your gold or descend at a higher
+multiplier — dying salvages only 20% of the unbanked hoard. Use them for
 Phase 0 playtesting while the Unity app is built.
 
 ## What exists right now
