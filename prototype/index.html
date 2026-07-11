@@ -275,6 +275,15 @@
   .act.goldact { border-color: rgba(217,164,65,.45); }
   .act.goldact .t { color: var(--gold); }
   .act.cancel { border-color: transparent; background: none; align-items: center; }
+
+  /* shop/long-sheet layout: item rows scroll, the exit action stays pinned and visible */
+  #sheet.pinned-mode { overflow-y: hidden; }
+  .sheet-scroll { overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+  .sheet-footer { flex: 0 0 auto; padding-top: 6px; }
+  .sheet-footer::before {
+    content: ""; display: block; height: 14px; margin: -14px 0 0;
+    background: linear-gradient(180deg, transparent, var(--wall) 85%);
+  }
   .act.cancel .t { color: var(--bone-faint); font-style: italic; font-size: 13px; }
   .shoprow { display: flex; align-items: center; gap: 10px; }
   .shoprow .s-icon { font-size: 22px; filter: saturate(.85); }
@@ -1070,28 +1079,48 @@ function sheetOption(o) {
   if (o.onPick) b.addEventListener("click", o.onPick);
   return b;
 }
+/// Every sheet splits into a scrollable body and a pinned footer, so the
+/// exit/continue action is always reachable no matter how long the content
+/// list gets or how short the device's viewport is (this was the actual
+/// cause of the "stuck after the boss" report — the shop's Descend button
+/// could fall below the fold with no visible scroll cue).
 function sheetShell(titleHTML, noteText) {
-  const sheet = $("#sheet");
-  sheet.innerHTML = "";
+  const outer = $("#sheet");
+  outer.innerHTML = "";
+  outer.classList.add("pinned-mode");
+  const scroll = document.createElement("div");
+  scroll.className = "sheet-scroll";
+  outer.appendChild(scroll);
+
   const h = document.createElement("h3");
   h.innerHTML = titleHTML;
-  sheet.appendChild(h);
+  scroll.appendChild(h);
   if (noteText) {
     const p = document.createElement("p");
     p.className = "note";
     p.textContent = noteText;
-    sheet.appendChild(p);
+    scroll.appendChild(p);
   }
-  return sheet;
+  return scroll; // callers append options into this — it scrolls independently
+}
+function sheetFooter() {
+  const outer = $("#sheet");
+  let footer = outer.querySelector(".sheet-footer");
+  if (!footer) {
+    footer = document.createElement("div");
+    footer.className = "sheet-footer";
+    outer.appendChild(footer);
+  }
+  return footer;
 }
 function sheetCancel(sheet, label) {
   const c = document.createElement("button");
   c.className = "act cancel";
   c.innerHTML = '<span class="t">' + (label || "Leave it") + "</span>";
   c.addEventListener("click", closeSheet);
-  sheet.appendChild(c);
+  sheetFooter().appendChild(c);
   $("#backdrop").classList.add("open");
-  sheet.classList.add("open");
+  $("#sheet").classList.add("open");
 }
 function closeSheet() { $("#sheet").classList.remove("open"); $("#backdrop").classList.remove("open"); }
 $("#backdrop").addEventListener("click", closeSheet);
@@ -1485,15 +1514,16 @@ function showShop(done) {
   const stockS = pickN(DRAFT_POOL, 2);
   const removalPrice = () => 8 + S.removals * 4;
   const rebuild = () => {
-    const sheet = sheetShell('<span class="h-art">🏪</span>The Between-Depths Shop <span class="dim">— 🪙 ' + S.gold + "</span>",
+    const scroll = sheetShell('<span class="h-art">🏪</span>The Between-Depths Shop <span class="dim">— 🪙 ' + S.gold + "</span>",
       "Spend before descending. Gold stays; regrets don't.");
+
     const row = (icon, name, sub, price, buy, soldOut) => {
       const b = document.createElement("button");
       b.className = "act" + (soldOut || price > S.gold ? "" : " goldact");
       b.disabled = soldOut || price > S.gold;
       b.innerHTML = '<span class="shoprow"><span class="s-icon">' + icon + '</span><span class="s-body"><span class="t">' + name + '</span><span class="sub">' + sub + '</span></span><span class="price">' + (soldOut ? "sold" : "🪙 " + price) + "</span></span>";
       if (!soldOut) b.addEventListener("click", () => { S.gold -= price; buy(); SFX.coin(); rebuild(); });
-      sheet.appendChild(b);
+      scroll.appendChild(b);
     };
     stockW.forEach((id, i) => {
       const w = WEAPONS[id];
@@ -1515,12 +1545,14 @@ function showShop(done) {
     rm.disabled = rp > S.gold;
     rm.innerHTML = '<span class="shoprow"><span class="s-icon">✂️</span><span class="s-body"><span class="t">Remove a skill card</span><span class="sub">Thin your deck — the fee rises each time.</span></span><span class="price">🪙 ' + rp + "</span></span>";
     rm.addEventListener("click", () => showRemoval(rp, () => rebuild()));
-    sheet.appendChild(rm);
+    scroll.appendChild(rm);
+
     const leave = document.createElement("button");
     leave.className = "act cancel";
     leave.innerHTML = '<span class="t">Descend to Depth ' + DEPTHS[Math.min(2, S.depth)].numeral + " →</span>";
     leave.addEventListener("click", () => { closeSheet(); done(); });
-    sheet.appendChild(leave);
+    sheetFooter().appendChild(leave);
+
     $("#backdrop").classList.add("open");
     $("#sheet").classList.add("open");
     render();
