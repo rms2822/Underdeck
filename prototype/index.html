@@ -20,52 +20,53 @@
 <!-- ART:START -->
 <title>Underdeck</title>
 <style>
-  /* ============ Slate & Gold — hex dungeon aesthetic ============ */
+  /* ============ Ink & Ember — arched-crypt aesthetic ============ */
   :root {
-    --ground: #0e1216;
-    --wall: #161c23;
-    --wall-hi: #1e2630;
-    --slate: #232b35;
-    --slate-lo: #181f27;
-    --parchment: #e9e1cf;
-    --parchment-lo: #cfc4ab;
-    --ink: #171310;
-    --bone: #dfd8c8;
-    --bone-dim: #97917f;
-    --bone-faint: #655f52;
-    --gold: #d9a441;
-    --gold-hi: #f0c66a;
-    --gold-deep: #8a6420;
-    --blood: #c03434;
-    --blood-deep: #7c1e1e;
+    --ground: #0c0a08;
+    --wall: #15110e;
+    --wall-hi: #1e1813;
+    --slate: #221b15;
+    --slate-lo: #17110d;
+    --parchment: #e7dcc6;
+    --parchment-lo: #c9bda0;
+    --ink: #120e0a;
+    --bone: #e1d9c8;
+    --bone-dim: #988e7c;
+    --bone-faint: #665c4e;
+    --gold: #de6a2c;
+    --gold-hi: #f59a52;
+    --gold-deep: #7c3212;
+    --blood: #c0342f;
+    --blood-deep: #781c1c;
     --verd: #7fa88f;
-    --steel: #9baab8;
-    --hex-mono: #b8c0cc;
-    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --steel: #a0a29c;
+    --hex-mono: #b3a99a;
+    --serif: "Hoefler Text", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    --display: "Copperplate", "Copperplate Gothic Bold", "Trajan Pro", "Iowan Old Style", var(--serif);
     --mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
   body {
     background:
-      radial-gradient(140% 90% at 50% 0%, rgba(217,164,65,.05), transparent 55%),
+      radial-gradient(120% 70% at 50% 108%, rgba(222,106,44,.14), transparent 60%),
       var(--ground);
     color: var(--bone);
     font-family: var(--serif);
     -webkit-tap-highlight-color: transparent;
     overflow-x: hidden;
   }
-  /* stone wall blocks */
+  /* smouldering vault: ember glow rising from the depths + fine soot grain */
   body::before {
     content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
     background:
-      repeating-linear-gradient(0deg, transparent 0 46px, rgba(0,0,0,.28) 46px 48px),
-      repeating-linear-gradient(90deg, transparent 0 74px, rgba(0,0,0,.2) 74px 76px),
-      repeating-linear-gradient(90deg, transparent 0 148px, rgba(255,255,255,.014) 148px 150px),
-      linear-gradient(180deg, var(--wall-hi), var(--wall) 40%, var(--ground));
-    opacity: .8;
-    mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 70%, transparent 100%);
+      radial-gradient(80% 45% at 50% 118%, rgba(245,154,82,.16), transparent 62%),
+      repeating-linear-gradient(115deg, rgba(255,255,255,.012) 0 2px, transparent 2px 5px),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+      linear-gradient(180deg, var(--wall) 0%, var(--ground) 55%);
+    opacity: .9;
+    mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
   }
   #motes { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
   #pain {
@@ -95,15 +96,17 @@
     88% { transform: translate(-2px, 0); }
   }
 
-  /* ============ shared hex bits ============ */
-  .hexclip { clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
+  /* ============ shared card-arch bits ============ */
+  /* arched tombstone: tall rounded top, squared foot — the crypt-slab card silhouette */
+  .hexclip { border-radius: 46% 46% 9% 9% / 32% 32% 7% 7%; }
   .logo {
-    font-weight: 800; letter-spacing: .1em;
+    font-family: var(--display);
+    font-weight: 800; letter-spacing: .14em;
     background: linear-gradient(180deg, var(--gold-hi), var(--gold) 55%, var(--gold-deep));
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 2px 3px rgba(0,0,0,.8));
   }
-  .caps { font-family: var(--serif); letter-spacing: .28em; text-transform: uppercase; font-size: 10.5px; color: var(--bone-dim); }
+  .caps { font-family: var(--display); letter-spacing: .26em; text-transform: uppercase; font-size: 10.5px; color: var(--bone-dim); }
   .caps.faint { color: var(--bone-faint); }
 
   /* ============ top bar ============ */
@@ -123,7 +126,7 @@
   #deck-hex .inner {
     position: absolute; inset: 3px; display: grid; place-items: center;
     background:
-      repeating-linear-gradient(45deg, rgba(217,164,65,.07) 0 4px, transparent 4px 8px),
+      repeating-linear-gradient(45deg, rgba(222,106,44,.07) 0 4px, transparent 4px 8px),
       linear-gradient(170deg, var(--slate), var(--slate-lo));
   }
   #deck-count { font-size: 24px; color: var(--gold-hi); font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -145,19 +148,20 @@
   }
   .cardhex .art { font-size: 40px; line-height: 1; filter: saturate(.85) drop-shadow(0 4px 7px rgba(0,0,0,.6)); }
   .cardhex .hexname {
-    font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase;
+    font-family: var(--display);
+    font-size: 8.5px; letter-spacing: .14em; text-transform: uppercase;
     color: var(--bone-dim); text-align: center; line-height: 1.25; min-height: 20px; max-width: 88px;
   }
   .badge {
     position: absolute; z-index: 2; width: 24px; height: 24px; border-radius: 50%;
     display: grid; place-items: center;
     font-family: var(--serif); font-size: 13px; font-weight: 700;
-    background: #10151b; border: 1.5px solid var(--hex-mono); color: #fff;
+    background: #140f0b; border: 1.5px solid var(--hex-mono); color: #fff;
   }
-  .badge.val { top: -3px; left: 1px; }
-  .badge.kind { top: -3px; right: 1px; font-size: 11px; }
+  .badge.val { top: 7px; left: 5px; }
+  .badge.kind { top: 7px; right: 5px; font-size: 11px; }
   .cardhex.monster .frame { background: var(--hex-mono); }
-  .cardhex.monster .badge.kind { background: #1a1114; }
+  .cardhex.monster .badge.kind { background: #1a1010; }
   .cardhex.elite .frame { background: linear-gradient(160deg, var(--blood), var(--blood-deep)); }
   .cardhex.elite .badge { border-color: var(--blood); }
   .cardhex.boss .frame { width: 116px; height: 130px; background: linear-gradient(160deg, var(--gold), var(--blood-deep)); }
@@ -166,7 +170,7 @@
   .cardhex.potion .fill, .cardhex.treasure .fill, .cardhex.cache .fill {
     background: radial-gradient(95% 95% at 50% 30%, var(--parchment) 0%, var(--parchment-lo) 90%);
   }
-  .cardhex.potion .frame { background: #f4efe2; }
+  .cardhex.potion .frame { background: #f2e8d6; }
   .cardhex.treasure .frame, .cardhex.cache .frame { background: linear-gradient(160deg, var(--gold-hi), var(--gold)); }
   .cardhex.curse .frame { background: linear-gradient(160deg, #6b4a8c, #2e1f42); }
   .cardhex.curse .fill { background: radial-gradient(90% 90% at 50% 32%, #241a33, #171021); }
@@ -178,11 +182,11 @@
   @keyframes hexout { to { opacity: 0; transform: scale(.85) translateY(-8px); } }
   .cardhex.fleeing { animation: hexflee .3s ease forwards; }
   @keyframes hexflee { to { opacity: 0; transform: translateY(70px) rotate(5deg); } }
-  .cardhex.selected .frame { background: var(--gold-hi); box-shadow: 0 0 16px rgba(217,164,65,.5); }
+  .cardhex.selected .frame { background: var(--gold-hi); box-shadow: 0 0 16px rgba(222,106,44,.55); }
   .hexslot {
     width: 84px; height: 94px; opacity: .5;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 84 94"><path d="M42 2 L80 24.5 V69.5 L42 92 L4 69.5 V24.5 Z" fill="none" stroke="%2397917f" stroke-width="1.6" stroke-dasharray="5 5"/></svg>');
-    background-size: 100% 100%;
+    border: 1.6px dashed var(--bone-faint);
+    border-radius: 46% 46% 9% 9% / 32% 32% 7% 7%;
   }
 
   /* floating combat text */
@@ -203,19 +207,19 @@
   /* ============ hero row ============ */
   #herorow { display: flex; justify-content: center; align-items: center; gap: 14px; padding: 4px 0 0; position: relative; }
   .kit { position: relative; width: 78px; display: flex; flex-direction: column; align-items: center; gap: 3px; }
-  .kit .frame { width: 72px; height: 80px; position: relative; background: #f4efe2; }
+  .kit .frame { width: 72px; height: 80px; position: relative; background: #f2e8d6; }
   .kit .fill { position: absolute; inset: 2.5px; display: grid; place-items: center;
     background: radial-gradient(95% 95% at 50% 30%, var(--parchment), var(--parchment-lo)); }
   .kit .art { font-size: 32px; filter: saturate(.85) drop-shadow(0 3px 5px rgba(0,0,0,.35)); }
   .kit.empty .frame { background: none; }
   .kit.empty .fill { background: none; }
   .kit .frame.slot {
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 80"><path d="M36 2 L68 21 V59 L36 78 L4 59 V21 Z" fill="none" stroke="%2397917f" stroke-width="1.5" stroke-dasharray="5 5"/></svg>');
-    background-size: 100% 100%; opacity: .55;
+    border: 1.5px dashed var(--bone-faint);
+    border-radius: 46% 46% 9% 9% / 32% 32% 7% 7%; opacity: .55;
   }
   #hero { width: 96px; }
   #hero .frame { width: 90px; height: 100px; background: linear-gradient(160deg, var(--gold-hi), var(--gold-deep)); }
-  #hero .fill { background: radial-gradient(90% 90% at 50% 30%, #2b3440, var(--slate-lo)); }
+  #hero .fill { background: radial-gradient(90% 90% at 50% 30%, #2c2119, var(--slate-lo)); }
   #hero .art { font-size: 46px; filter: grayscale(1) brightness(1.9) sepia(.25) drop-shadow(0 4px 7px rgba(0,0,0,.7)); }
   #hero.pulse .frame { animation: heropulse .55s ease; }
   @keyframes heropulse { 30% { box-shadow: 0 0 0 5px rgba(127,168,143,.55); } }
@@ -259,13 +263,13 @@
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
     max-width: 430px; margin: 0 auto; max-height: 80dvh; overflow-y: auto;
     background: linear-gradient(180deg, var(--wall-hi), var(--wall));
-    border-radius: 14px 14px 0 0; border: 1px solid rgba(217,164,65,.25); border-bottom: 0;
+    border-radius: 14px 14px 0 0; border: 1px solid rgba(222,106,44,.25); border-bottom: 0;
     padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
     transform: translateY(105%); transition: transform .24s ease;
     display: flex; flex-direction: column; gap: 8px;
   }
   #sheet.open { transform: translateY(0); }
-  #sheet h3 { font-size: 18px; font-weight: 600; text-wrap: balance; }
+  #sheet h3 { font-family: var(--display); font-size: 17px; font-weight: 700; letter-spacing: .04em; text-wrap: balance; }
   #sheet h3 .h-art { font-size: 22px; margin-right: 6px; filter: saturate(.85); }
   #sheet h3 .dim { color: var(--bone-dim); font-size: 13px; font-style: italic; }
   #sheet .note { font-size: 12px; font-style: italic; color: var(--bone-dim); line-height: 1.4; }
@@ -280,7 +284,7 @@
   .act .sub { font-family: var(--mono); font-size: 10.5px; color: var(--bone-dim); }
   .act.lethal { border-color: rgba(192,52,52,.6); }
   .act.lethal .sub { color: var(--blood); }
-  .act.goldact { border-color: rgba(217,164,65,.45); }
+  .act.goldact { border-color: rgba(222,106,44,.45); }
   .act.goldact .t { color: var(--gold); }
   .act.cancel { border-color: transparent; background: none; align-items: center; }
 
@@ -304,7 +308,7 @@
   .overlay {
     position: fixed; inset: 0; z-index: 12; overflow-y: auto;
     background:
-      radial-gradient(120% 60% at 50% 0%, rgba(217,164,65,.08), transparent 55%),
+      radial-gradient(120% 60% at 50% 0%, rgba(222,106,44,.08), transparent 55%),
       var(--ground);
     display: none; flex-direction: column; align-items: center; justify-content: center;
     gap: 16px; padding: 40px 26px; text-align: center;
@@ -318,11 +322,12 @@
   .digest .g { color: var(--gold); } .digest .r { color: var(--blood); } .digest .v { color: var(--verd); }
   .btn-col { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px; margin-top: 4px; }
   .cta {
-    padding: 14px; border-radius: 8px; letter-spacing: .18em; text-transform: uppercase; font-size: 13px;
-    background: linear-gradient(180deg, var(--gold-hi), var(--gold-deep)); color: #221604; font-weight: 800;
+    font-family: var(--display);
+    padding: 14px; border-radius: 8px; letter-spacing: .16em; text-transform: uppercase; font-size: 13px;
+    background: linear-gradient(180deg, var(--gold-hi), var(--gold-deep)); color: #1c0e05; font-weight: 800;
   }
   .cta.ghost { background: none; border: 1px solid rgba(223,216,200,.28); color: var(--bone); font-weight: 400; }
-  .verdict { font-size: clamp(38px, 11vw, 52px); letter-spacing: .1em; font-weight: 700; }
+  .verdict { font-family: var(--display); font-size: clamp(36px, 10vw, 50px); letter-spacing: .12em; font-weight: 700; }
   .verdict.good { color: var(--gold); }
   .verdict.bad { color: var(--blood); }
   .bigart { font-size: 54px; filter: saturate(.85) drop-shadow(0 6px 12px rgba(0,0,0,.7)); }
@@ -363,17 +368,18 @@
   .tut-mini-skill .s-name { font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--bone); }
   .tut-mini-skill .s-cost { font-family: var(--mono); font-size: 9px; color: var(--gold); }
   .tut-emblem {
+    position: relative;
     width: 92px; height: 102px; display: grid; place-items: center;
     background: linear-gradient(160deg, var(--gold), var(--gold-deep));
   }
   .tut-emblem .inner {
     position: absolute; inset: 4px; display: grid; place-items: center;
-    background: repeating-linear-gradient(45deg, rgba(217,164,65,.07) 0 4px, transparent 4px 8px), linear-gradient(170deg, var(--slate), var(--slate-lo));
+    background: repeating-linear-gradient(45deg, rgba(222,106,44,.07) 0 4px, transparent 4px 8px), linear-gradient(170deg, var(--slate), var(--slate-lo));
   }
   .tut-emblem span { font-size: 30px; color: var(--gold-hi); font-weight: 600; }
   .tut-relic-chip {
     display: flex; align-items: center; gap: 10px; text-align: left;
-    background: rgba(0,0,0,.28); border: 1px solid rgba(217,164,65,.35); border-radius: 10px;
+    background: rgba(0,0,0,.28); border: 1px solid rgba(222,106,44,.35); border-radius: 10px;
     padding: 9px 13px; max-width: 300px;
   }
   .tut-relic-chip .r-art { font-size: 24px; }
@@ -1805,7 +1811,7 @@ $("#tut-next").addEventListener("click", () => {
   }));
   (function tick() {
     cx.clearRect(0, 0, w, h);
-    cx.fillStyle = "rgba(217,164,65,1)";
+    cx.fillStyle = "rgba(222,106,44,1)";
     for (const p of ps) {
       p.y -= p.v / 1000; p.drift += 0.01;
       if (p.y < -0.02) { p.y = 1.02; p.x = Math.random(); }
