@@ -21,6 +21,15 @@ deck-thinning, GDD scoring, and a seeded Daily Descent. The Red Court class
 abilities (designed on the physical deck) live on as draftable skills and the
 Phoenix Feather relic.
 
+## Publishing to the App Store
+
+**📋 [`APPSTORE_SETUP.md`](APPSTORE_SETUP.md)** — the game is wrapped as a
+real native iOS app (`ios/`, via Capacitor) with a GitHub Actions pipeline
+(`.github/workflows/ios-release.yml`) that builds, signs, and uploads to
+TestFlight/App Store Connect on a cloud macOS runner. No local Mac or Xcode
+needed — trigger it from GitHub's website. The setup doc covers the Apple
+Developer account and API key steps only you can do.
+
 ## What exists right now
 
 Two parallel C# modules under `Assets/Scripts/`, both pure engine + tests

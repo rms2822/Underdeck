@@ -1,0 +1,8 @@
+{
+  "appId": "com.underdeckgame.app",
+  "appName": "Underdeck",
+  "webDir": "prototype",
+  "ios": {
+    "contentInset": "always"
+  }
+}

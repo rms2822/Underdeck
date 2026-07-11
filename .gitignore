@@ -29,3 +29,15 @@ sysinfo.txt
 .vscode/
 *.swp
 .DS_Store
+
+# ---- Capacitor / iOS app wrapper ----
+/node_modules/
+/vendor/bundle/
+/ios/App/App/public/
+ios/App/Pods/
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/App.xcodeproj/xcuserdata/
+ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
+*.ipa
+*.dSYM.zip
+*.dSYM

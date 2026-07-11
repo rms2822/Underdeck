@@ -1,0 +1,59 @@
+name: iOS Release (build + upload to TestFlight)
+
+# Manual trigger only — this uploads a real build to App Store Connect,
+# so it should never fire silently on every push. Trigger it from the
+# GitHub website (Actions tab → this workflow → "Run workflow"), which
+# works fine from Safari on an iPhone.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-and-upload:
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Ruby (for Fastlane)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.2"
+          bundler-cache: true
+
+      - name: Install web/Capacitor dependencies
+        run: npm ci
+
+      - name: Sync the native iOS project with the web game
+        run: npx cap sync ios
+
+      - name: Build and upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_CONTENT: ${{ secrets.ASC_KEY_CONTENT }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_IDENTIFIER: ${{ secrets.APP_IDENTIFIER }}
+        run: bundle exec fastlane ios release
+
+      - name: Upload build artifacts (for inspection if something goes wrong)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ipa-and-logs
+          path: |
+            build/*.ipa
+            ~/Library/Logs/gym/*
+          if-no-files-found: ignore
+          retention-days: 14
