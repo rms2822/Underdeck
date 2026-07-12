@@ -109,6 +109,24 @@
   .caps { font-family: var(--display); letter-spacing: .26em; text-transform: uppercase; font-size: 10.5px; color: var(--bone-dim); }
   .caps.faint { color: var(--bone-faint); }
 
+  /* ============ engraved art set (inline SVG emblems) ============ */
+  /* Each emblem is sized off the local font-size so it drops in anywhere an
+     emoji used to sit — card art, kit frames, sheet headers, float text. */
+  .em { width: 1.2em; height: 1.2em; display: inline-block; vertical-align: -0.22em; overflow: visible; }
+  /* card/kit frames give the emblem the whole dark fill to live in */
+  .cardhex .art .em, .kit .art .em { width: 1.62em; height: 1.62em; }
+  .skill .s-art .em, .tut-mini-skill .s-art .em { width: 1.5em; height: 1.5em; }
+  .bigart .em, .menagerie .em { width: 1.4em; height: 1.4em; }
+  .em .b { fill: url(#agBone); }
+  .em .h { fill: url(#agHatch); }
+  .em .s { fill: #160f0a; opacity: .5; }
+  .em .k { fill: #160f0a; }
+  .em .e { fill: url(#agEmber); }
+  .em .y { fill: #f7a862; }
+  .em .l { fill: none; stroke: #3a281a; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
+  .em .r { fill: none; stroke: url(#agEmber); stroke-width: 8; stroke-linecap: round; stroke-linejoin: round; }
+  .em .w { fill: none; stroke: url(#agBone); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+
   /* ============ top bar ============ */
   #topbar { display: flex; align-items: center; gap: 10px; min-height: 30px; }
   #topbar .logo { font-size: 17px; }
@@ -335,7 +353,7 @@
   .scoretable { font-family: var(--mono); font-size: 12.5px; color: var(--bone-dim); display: flex; flex-direction: column; gap: 4px; font-variant-numeric: tabular-nums; }
   .scoretable .total { color: var(--gold); font-size: 16px; margin-top: 4px; }
   .best-line { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--bone-faint); text-transform: uppercase; }
-  .menagerie { font-size: 24px; letter-spacing: .3em; filter: saturate(.85) drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
+  .menagerie { font-size: 26px; display: flex; gap: 18px; justify-content: center; filter: drop-shadow(0 4px 8px rgba(0,0,0,.6)); }
 
   /* ============ tutorial ============ */
   #tutorial { justify-content: flex-start; gap: 12px; padding-top: max(46px, env(safe-area-inset-top)); }
@@ -404,6 +422,19 @@
   }
 </style>
 
+<!-- shared engraving defs for the inline-SVG art set (Ink & Ember v2) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="agBone" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#f2ead9"/><stop offset="100%" stop-color="#c0b190"/>
+  </linearGradient>
+  <linearGradient id="agEmber" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#f7a862"/><stop offset="55%" stop-color="#de6a2c"/><stop offset="100%" stop-color="#7c3212"/>
+  </linearGradient>
+  <pattern id="agHatch" width="7" height="7" patternTransform="rotate(35)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="7" stroke="#7c3212" stroke-width="1.4" opacity=".22"/>
+  </pattern>
+</defs></svg>
+
 <canvas id="motes" aria-hidden="true"></canvas>
 <div id="pain" aria-hidden="true"></div>
 
@@ -426,14 +457,14 @@
   <div id="herorow">
     <div class="kit" id="weapon-kit"></div>
     <div class="kit" id="hero">
-      <div class="frame hexclip"><div class="fill hexclip"><span class="art" aria-hidden="true">👤</span></div></div>
+      <div class="frame hexclip"><div class="fill hexclip"><span class="art" aria-hidden="true" data-art="hero"></span></div></div>
       <span class="kitline"><span class="heart">♥</span> <span id="hp-num">20/20</span></span>
     </div>
     <div class="kit" id="relic-kit"></div>
   </div>
 
   <div id="statline">
-    <span id="gold-line">🪙 0</span>
+    <span id="gold-line"></span>
   </div>
 
   <div id="handrow"></div>
@@ -447,7 +478,7 @@
   <p class="caps">descend · deal · survive</p>
   <h1 class="logo big">UNDERDECK</h1>
   <p class="caps faint">the dungeon is a deck that wants you dead</p>
-  <p class="menagerie" aria-hidden="true">🗡️ 🐉 🧪 🪙 🏆</p>
+  <p class="menagerie" aria-hidden="true"><span data-art="dagger"></span><span data-art="dragon"></span><span data-art="flask"></span><span data-art="coin"></span><span data-art="trophy"></span></p>
   <div class="flourish"></div>
   <div class="btn-col">
     <button class="cta" id="btn-new">Begin the Descent</button>
@@ -522,54 +553,134 @@ function shuffleWith(a, next) {
 const rngInt = (next, n) => Number(next() % BigInt(n));
 
 /* ---------- content: monsters, weapons, relics, skills ---------- */
+/* ================================================================
+   ART — the engraved Ink & Ember emblem set (inline SVG, no assets).
+   Every game visual routes through here; shared gradients/hatch live
+   in the <defs> block at the top of the body. Classes: b bone, h hatch,
+   s shadow, k ink, e ember, y bright ember, l dark line, r ember
+   stroke, w bone stroke.
+   ================================================================ */
+const ART = (() => {
+  const em = (inner) => '<svg class="em" viewBox="0 0 256 256" aria-hidden="true">' + inner + "</svg>";
+  const spark = (x, y, s) => '<path class="y" d="M' + x + " " + (y - s) + "l" + s * 0.36 + " " + (s - s * 0.36) + " " + (s - s * 0.36) + " " + s * 0.36 + "-" + (s - s * 0.36) + " " + s * 0.36 + "-" + s * 0.36 + " " + (s - s * 0.36) + "-" + s * 0.36 + "-" + (s - s * 0.36) + "-" + (s - s * 0.36) + "-" + s * 0.36 + " " + (s - s * 0.36) + "-" + s * 0.36 + 'z"/>';
+  const A = {};
+  /* ---- monsters ---- */
+  A.rat = em('<path class="b" d="M44 168q-8-50 50-62 40-8 62 10 22 4 26 24 2 16-16 18l-14 2q-8 20-42 22-50 2-66-14z"/><path class="h" d="M44 168q-8-50 50-62 40-8 62 10 22 4 26 24 2 16-16 18l-14 2q-8 20-42 22-50 2-66-14z"/><circle class="b" cx="148" cy="106" r="15"/><circle class="s" cx="150" cy="108" r="7"/><circle class="y" cx="166" cy="140" r="6"/><path class="w" d="M178 178q34 10 18 36"/><path class="l" d="M196 148h26M196 158l24 8"/>');
+  A.bat = em('<path class="b" d="M128 84c-8 24-26 34-56 32 12 16 8 32-8 40 26-2 42 6 48 22q6 12 16 12t16-12c6-16 22-24 48-22-16-8-20-24-8-40-30 2-48-8-56-32z"/><path class="h" d="M128 84c-8 24-26 34-56 32 12 16 8 32-8 40 26-2 42 6 48 22q6 12 16 12t16-12c6-16 22-24 48-22-16-8-20-24-8-40-30 2-48-8-56-32z"/><path class="b" d="M114 92l-10-22 16 8zM142 92l10-22-16 8z"/><circle class="y" cx="118" cy="126" r="5.5"/><circle class="y" cx="138" cy="126" r="5.5"/>');
+  A.slime = em('<path class="b" d="M52 170q-2-88 76-88t76 88q-12 10-24 2-10 10-24 4-12 10-28 2-14 8-28 0-14 6-24-4-14 6-24-4z"/><path class="h" d="M52 170q-2-88 76-88t76 88q-12 10-24 2-10 10-24 4-12 10-28 2-14 8-28 0-14 6-24-4-14 6-24-4z"/><path class="b" d="M88 180q2 16 12 20-16 2-16-12z"/><ellipse class="k" cx="104" cy="134" rx="12" ry="15"/><ellipse class="k" cx="152" cy="134" rx="12" ry="15"/><circle class="y" cx="104" cy="134" r="4.5"/><circle class="y" cx="152" cy="134" r="4.5"/>');
+  A.goblin = em('<path class="b" d="M76 118 42 100q30-10 42 4zM180 118l34-18q-30-10-42 4z"/><ellipse class="b" cx="128" cy="134" rx="54" ry="58"/><ellipse class="h" cx="128" cy="134" rx="54" ry="58"/><circle class="y" cx="106" cy="124" r="6"/><circle class="y" cx="150" cy="124" r="6"/><path class="k" d="M94 158q34 24 68 0-8 22-34 22t-34-22z"/><path class="k" d="M122 138h12l-6 10z"/>');
+  A.skeleton = em('<path class="b" d="M128 58c-35 0-60 25-60 58 0 19 8 32 19 42v20c0 7 5 11 13 11h56c8 0 13-4 13-11v-20c11-10 19-23 19-42 0-33-25-58-60-58z"/><path class="h" d="M128 58c-35 0-60 25-60 58 0 19 8 32 19 42v20c0 7 5 11 13 11h56c8 0 13-4 13-11v-20c11-10 19-23 19-42 0-33-25-58-60-58z"/><path class="s" d="M128 58c-35 0-60 25-60 58 0 19 8 32 19 42-6-14-9-30-9-46 0-30 18-52 50-52z"/><ellipse class="k" cx="105" cy="126" rx="17" ry="19"/><ellipse class="k" cx="151" cy="126" rx="17" ry="19"/><circle class="y" cx="105" cy="126" r="6.5"/><circle class="y" cx="151" cy="126" r="6.5"/><path class="k" d="M128 148l-10 20h20z"/><path class="l" d="M104 196v20M118 196v22M138 196v22M152 196v20"/>');
+  A.bandit = em('<path class="b" d="M128 54c-34 0-56 26-56 60 0 26 10 44 24 64h64c14-20 24-38 24-64 0-34-22-60-56-60z"/><path class="h" d="M128 54c-34 0-56 26-56 60 0 26 10 44 24 64h64c14-20 24-38 24-64 0-34-22-60-56-60z"/><path class="k" d="M128 84c-24 0-40 18-40 42 0 18 8 32 18 46h44c10-14 18-28 18-46 0-24-16-42-40-42z"/><path class="e" d="M90 116h76q8 0 8 10t-8 10H90q-8 0-8-10t8-10z"/><circle class="k" cx="110" cy="126" r="6"/><circle class="k" cx="146" cy="126" r="6"/>');
+  A.wolf = em('<path class="b" d="M74 180q-10-44 18-60 0-26 22-32l44-34q10 18-2 32 22 8 24 34 2 48-50 56-38 6-56 4z"/><path class="h" d="M74 180q-10-44 18-60 0-26 22-32l44-34q10 18-2 32 22 8 24 34 2 48-50 56-38 6-56 4z"/><circle class="y" cx="148" cy="122" r="6"/><path class="l" d="M96 160q22 10 44 2"/><path class="s" d="M74 180q-10-44 18-60 0-26 22-32-16 24-14 48-22 14-26 44z"/>');
+  A.cultist = em('<path class="b" d="M128 50c-34 0-56 28-56 62 0 26 10 46 24 66h64c14-20 24-40 24-66 0-34-22-62-56-62z"/><path class="h" d="M128 50c-34 0-56 28-56 62 0 26 10 46 24 66h64c14-20 24-40 24-66 0-34-22-62-56-62z"/><path class="k" d="M128 82c-24 0-40 20-40 44 0 18 8 34 18 52h44c10-18 18-34 18-52 0-24-16-44-40-44z"/><path class="y" d="M128 108l11 16-11 16-11-16z"/><circle class="e" cx="110" cy="152" r="4"/><circle class="e" cx="146" cy="152" r="4"/>');
+  A.ogre = em('<rect class="b" x="64" y="80" width="128" height="114" rx="34"/><rect class="h" x="64" y="80" width="128" height="114" rx="34"/><rect class="s" x="74" y="106" width="108" height="18" rx="9"/><circle class="y" cx="104" cy="134" r="5.5"/><circle class="y" cx="152" cy="134" r="5.5"/><path class="b" d="M94 180q-4-24 10-28 2 18-2 28zM162 180q4-24-10-28-2 18 2 28z"/><path class="k" d="M118 156h6v8h-6zM132 156h6v8h-6z"/>');
+  A.wraith = em('<path class="b" d="M128 44c-32 0-50 26-50 58v54q10-12 18-2 8 12 16 0 8-10 16 0 8 12 16 0 8-10 18 2 8-12 16-2v-52c0-32-18-58-50-58z"/><path class="h" d="M128 44c-32 0-50 26-50 58v54q10-12 18-2 8 12 16 0 8-10 16 0 8 12 16 0 8-10 18 2 8-12 16-2v-52c0-32-18-58-50-58z"/><ellipse class="k" cx="110" cy="106" rx="10" ry="15"/><ellipse class="k" cx="146" cy="106" rx="10" ry="15"/><ellipse class="k" cx="128" cy="142" rx="8" ry="11"/>');
+  A.knight = em('<path class="e" d="M118 36q10-8 20 0v34h-20z"/><path class="b" d="M84 68h88q16 26 16 56v52H68v-52q0-30 16-56z"/><path class="h" d="M84 68h88q16 26 16 56v52H68v-52q0-30 16-56z"/><rect class="k" x="84" y="126" width="88" height="13" rx="6.5"/><circle class="k" cx="114" cy="160" r="4"/><circle class="k" cx="128" cy="160" r="4"/><circle class="k" cx="142" cy="160" r="4"/><path class="s" d="M84 68q-16 26-16 56v52h20v-52q0-30 12-56z"/>');
+  A.golem = em('<path class="b" d="M96 60h64l34 34v66l-34 34H96l-34-34V94z"/><path class="h" d="M96 60h64l34 34v66l-34 34H96l-34-34V94z"/><path fill="none" stroke="#160f0a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" d="M130 60l-12 28 16 20-14 24 12 22-10 26"/><circle class="y" cx="134" cy="88" r="4"/><circle class="y" cx="120" cy="132" r="4"/><circle class="y" cx="132" cy="178" r="4"/><ellipse class="k" cx="96" cy="120" rx="10" ry="7"/><ellipse class="k" cx="168" cy="120" rx="10" ry="7"/>');
+  A.dragon = em('<circle class="r" cx="128" cy="128" r="88"/><path class="b" d="M96 150c-10-6-14-20-8-32 4-9 2-16-4-22 12-2 20 2 26 10 6-14 20-22 36-20-6 4-8 10-6 16 12-2 22 4 26 16 4-2 10-2 14 2-6 2-8 6-8 12 0 14-12 24-28 24-4 8-14 12-24 10 2-6 0-12-6-14-6 2-10 8-8 14-6-2-2-16 0-22z"/><path class="h" d="M96 150c-10-6-14-20-8-32 4-9 2-16-4-22 12-2 20 2 26 10 6-14 20-22 36-20-6 4-8 10-6 16 12-2 22 4 26 16 4-2 10-2 14 2-6 2-8 6-8 12 0 14-12 24-28 24-4 8-14 12-24 10 2-6 0-12-6-14-6 2-10 8-8 14-6-2-2-16 0-22z"/><circle class="y" cx="150" cy="120" r="6"/><path class="e" d="M170 104c10-6 18-4 24 4-8-2-16 0-24 6z"/>');
+  /* ---- bosses ---- */
+  A.gaoler = em('<path class="b" d="M128 54c-31 0-54 25-54 60 0 31 15 54 31 80h46c16-26 31-49 31-80 0-35-23-60-54-60z"/><path class="h" d="M128 54c-31 0-54 25-54 60 0 31 15 54 31 80h46c16-26 31-49 31-80 0-35-23-60-54-60z"/><path class="k" d="M128 72c-23 0-40 19-40 44 0 21 8 36 19 55h42c11-19 19-34 19-55 0-25-17-44-40-44z"/><circle class="y" cx="111" cy="128" r="6.5"/><circle class="y" cx="145" cy="128" r="6.5"/><ellipse class="r" cx="88" cy="198" rx="12" ry="8"/><ellipse class="r" cx="112" cy="198" rx="12" ry="8"/><ellipse class="r" cx="136" cy="198" rx="12" ry="8"/><ellipse class="r" cx="160" cy="198" rx="12" ry="8"/>');
+  A.rotking = em('<path class="e" d="M80 66l8-30 18 14 20-24 20 18 16-16 14 26z"/><circle class="y" cx="108" cy="52" r="4"/><circle class="y" cx="148" cy="48" r="4"/><path class="b" d="M128 62c-35 0-60 25-60 58 0 19 8 32 19 42v18c0 7 5 11 13 11h56c8 0 13-4 13-11v-18c11-10 19-23 19-42 0-33-25-58-60-58z"/><path class="h" d="M128 62c-35 0-60 25-60 58 0 19 8 32 19 42v18c0 7 5 11 13 11h56c8 0 13-4 13-11v-18c11-10 19-23 19-42 0-33-25-58-60-58z"/><ellipse class="k" cx="105" cy="128" rx="16" ry="18"/><ellipse class="k" cx="151" cy="128" rx="16" ry="18"/><circle class="y" cx="105" cy="128" r="6"/><circle class="y" cx="151" cy="128" r="6"/><path class="k" d="M128 148l-9 18h18z"/><path fill="none" stroke="#160f0a" stroke-width="6" stroke-linecap="round" d="M158 84l8 18-6 14"/><path class="l" d="M106 194v18M122 194v20M138 194v20M152 194v18"/>');
+  A.tyrant = em('<path class="b" d="M128 66q46 0 46 46 0 20-12 30l6 18q-10 8-18-2-8 10-22 10t-22-10q-8 10-18 2l6-18q-12-10-12-30 0-46 46-46z"/><path class="h" d="M128 66q46 0 46 46 0 20-12 30l6 18q-10 8-18-2-8 10-22 10t-22-10q-8 10-18 2l6-18q-12-10-12-30 0-46 46-46z"/><path class="w" d="M84 152q-28 10-32 36M102 164q-12 18-4 36M154 164q12 18 4 36M172 152q28 10 32 36"/><circle class="k" cx="128" cy="114" r="21"/><ellipse class="y" cx="128" cy="114" rx="5" ry="13"/>');
+  /* ---- cards ---- */
+  A.vial = em('<rect class="k" x="104" y="42" width="48" height="12" rx="6"/><rect class="b" x="112" y="48" width="32" height="152" rx="16"/><path class="e" d="M112 140h32v44a16 16 0 0 1-32 0z"/><circle class="y" cx="122" cy="158" r="4"/><circle class="y" cx="132" cy="174" r="3"/>');
+  A.flask = em('<rect class="k" x="104" y="44" width="48" height="12" rx="6"/><path class="b" d="M112 52h32v42l34 84q6 26-22 26h-56q-28 0-22-26l34-84z"/><path class="h" d="M112 52h32v42l34 84q6 26-22 26h-56q-28 0-22-26l34-84z"/><path class="e" d="M97 140l-15 38q-4 16 14 16h64q18 0 14-16l-15-38z"/><circle class="y" cx="118" cy="164" r="4.5"/><circle class="y" cx="140" cy="178" r="3.5"/>');
+  A.amphora = em('<rect class="k" x="108" y="48" width="40" height="12" rx="6"/><path class="w" d="M92 86q-24 10-10 34M164 86q24 10 10 34"/><path class="b" d="M128 58q40 0 40 38 0 52-24 74-4 16-16 16t-16-16q-24-22-24-74 0-38 40-38z"/><path class="h" d="M128 58q40 0 40 38 0 52-24 74-4 16-16 16t-16-16q-24-22-24-74 0-38 40-38z"/><rect class="e" x="96" y="112" width="64" height="16" rx="8"/>');
+  A.coin = em('<circle class="b" cx="128" cy="128" r="58"/><circle class="h" cx="128" cy="128" r="58"/><circle class="r" cx="128" cy="128" r="38"/><path class="k" d="M128 106l18 34h-36z"/><circle class="y" cx="128" cy="126" r="4"/>');
+  A.cache = em('<path class="b" d="M76 100q0-32 52-32t52 32v12H76z"/><path class="h" d="M76 100q0-32 52-32t52 32v12H76z"/><rect class="e" x="76" y="110" width="104" height="9" rx="4"/><rect class="b" x="76" y="117" width="104" height="62" rx="9"/><rect class="h" x="76" y="117" width="104" height="62" rx="9"/><rect class="s" x="98" y="70" width="11" height="108"/><rect class="s" x="148" y="70" width="11" height="108"/><circle class="k" cx="128" cy="142" r="8"/><rect class="k" x="124" y="146" width="8" height="15" rx="3"/>');
+  /* ---- curses ---- */
+  A.spider = em('<path class="w" d="M104 118q-34-18-44-44M98 140q-42-6-60-24M98 158q-38 8-56 28M106 176q-30 22-34 46M152 118q34-18 44-44M158 140q42-6 60-24M158 158q38 8 56 28M150 176q30 22 34 46"/><circle class="b" cx="128" cy="150" r="35"/><circle class="h" cx="128" cy="150" r="35"/><circle class="b" cx="128" cy="102" r="19"/><path class="e" d="M119 136h18l-9 13zM119 165h18l-9-13z"/><circle class="y" cx="122" cy="98" r="4"/><circle class="y" cx="134" cy="98" r="4"/>');
+  A.snake = em('<path fill="none" stroke="url(#agBone)" stroke-width="17" stroke-linecap="round" d="M88 198q-42-20 0-40 44-20 86-8 30 8 22-20-6-22-36-16"/><ellipse class="b" cx="156" cy="110" rx="21" ry="15"/><circle class="y" cx="162" cy="106" r="4.5"/><path class="e" d="M176 110l18-4-7 11z"/>');
+  A.rustwind = em('<path class="w" d="M56 100q60-24 108 0 20 10 36-4"/><path class="r" d="M52 140q64-22 116 2 16 8 32-2"/><path class="w" d="M64 178q52-18 96 0"/><circle class="y" cx="176" cy="94" r="4"/><circle class="y" cx="200" cy="138" r="4"/><circle class="y" cx="148" cy="172" r="4"/><circle class="y" cx="96" cy="88" r="3"/>');
+  /* ---- weapons ---- */
+  A.dagger = em('<path class="b" d="M128 38l13 118-13 24-13-24z"/><path class="s" d="M128 38v142l-13-24z"/><path class="e" d="M90 166h76c5 0 5 12 0 12H90c-5 0-5-12 0-12z"/><rect class="k" x="119" y="178" width="18" height="42" rx="5"/><rect class="h" x="119" y="178" width="18" height="42" rx="5"/><circle class="e" cx="128" cy="226" r="10"/>');
+  A.rapier = em('<path class="b" d="M128 28l7 122-7 18-7-18z"/><path class="e" d="M100 168q28 20 56 0-4 20-28 20t-28-20z"/><path class="l" d="M100 170q-14 26 24 42"/><rect class="k" x="122" y="188" width="12" height="32" rx="5"/><circle class="y" cx="128" cy="228" r="7"/>');
+  A.kris = em('<path class="b" d="M128 32c10 10 12 22 4 34 10 10 12 22 4 34 10 10 12 22 4 34l-12 28-12-28c-8-12-6-24 4-34-8-12-6-24 4-34-8-12-6-24 4-34z"/><path class="s" d="M128 32v130l-12-28c-8-12-6-24 4-34-8-12-6-24 4-34-8-12-6-24 4-34z"/><path class="e" d="M100 166h56q6 0 6 8t-6 8h-56q-6 0-6-8t6-8z"/><rect class="k" x="120" y="182" width="16" height="36" rx="5"/><circle class="e" cx="128" cy="224" r="9"/>');
+  A.whisper = em('<path class="b" d="M128 30l9 130-9 20-9-20z"/><path class="s" d="M128 30v150l-9-20z"/><path class="r" d="M82 88q-20-4-24-22M174 122q22-2 28-20"/><path class="e" d="M98 168h60q5 0 5 9t-5 9H98q-5 0-5-9t5-9z"/><rect class="k" x="121" y="186" width="14" height="34" rx="5"/><circle class="y" cx="128" cy="226" r="7"/>');
+  A.hammer = em('<rect class="b" x="64" y="62" width="128" height="58" rx="13"/><rect class="h" x="64" y="62" width="128" height="58" rx="13"/><rect class="s" x="64" y="62" width="36" height="58" rx="13"/><circle class="y" cx="170" cy="78" r="4"/><circle class="y" cx="170" cy="104" r="4"/><rect class="k" x="119" y="120" width="18" height="98" rx="6"/><rect class="h" x="119" y="120" width="18" height="98" rx="6"/><rect class="e" x="113" y="192" width="30" height="15" rx="7"/>');
+  /* ---- relics ---- */
+  A.whetstone = em('<g transform="rotate(-16 128 142)"><rect class="b" x="54" y="120" width="148" height="44" rx="14"/><rect class="h" x="54" y="120" width="148" height="44" rx="14"/><rect class="s" x="54" y="146" width="148" height="18" rx="9"/></g>' + spark(196, 96, 16) + spark(170, 78, 10));
+  A.emberheart = em('<path class="b" d="M128 198c-52-38-72-64-72-92 0-24 18-38 38-38 16 0 28 10 34 22 6-12 18-22 34-22 20 0 38 14 38 38 0 28-20 54-72 92z"/><path class="h" d="M128 198c-52-38-72-64-72-92 0-24 18-38 38-38 16 0 28 10 34 22 6-12 18-22 34-22 20 0 38 14 38 38 0 28-20 54-72 92z"/><path class="e" d="M128 172c-20-18-30-34-30-50 10 2 16-4 16-14 10 8 6 18 14 24 2-12 10-16 10-28 14 16 20 34 20 48 0 12-12 20-30 20z"/><circle class="y" cx="128" cy="146" r="8"/>');
+  A.boots = em('<path class="b" d="M100 62h36v70q0 10 12 12l34 8q16 4 12 22l-3 12H96z"/><path class="h" d="M100 62h36v70q0 10 12 12l34 8q16 4 12 22l-3 12H96z"/><rect class="k" x="92" y="184" width="104" height="14" rx="7"/><path class="e" d="M96 118q-24-2-34-18 20-8 34 2z"/><path class="l" d="M66 150H42M72 170H40"/>');
+  A.glasssigil = em('<path class="b" d="M128 48l58 46-58 114-58-114z"/><path class="h" d="M128 48l58 46-58 114-58-114z"/><path class="l" d="M70 94h116M128 48l-24 46 24 114 24-114z"/><path class="y" d="M106 84l16-24 7 13-15 13z"/>');
+  A.gravebind = em('<circle fill="none" stroke="url(#agBone)" stroke-width="18" cx="128" cy="106" r="42"/><rect class="k" x="118" y="140" width="20" height="14" rx="5"/><ellipse class="r" cx="128" cy="176" rx="14" ry="10"/><ellipse class="r" cx="128" cy="204" rx="14" ry="10"/><circle class="y" cx="100" cy="80" r="4"/>');
+  A.torchbearer = em('<path class="e" d="M128 34c-18 22-26 38-26 52 0 18 12 28 26 28s26-10 26-28c0-14-8-30-26-52z"/><path class="y" d="M128 66c-8 10-12 18-12 26 0 10 6 15 12 15s12-5 12-15c0-8-4-16-12-26z"/><path class="b" d="M104 118h48l-7 22h-34z"/><rect class="k" x="120" y="140" width="16" height="80" rx="6"/><rect class="h" x="120" y="140" width="16" height="80" rx="6"/>');
+  A.phoenix = em('<path class="b" d="M128 42c-27 27-42 62-42 99 0 31 19 54 42 71 23-17 42-40 42-71 0-37-15-72-42-99z"/><path class="e" d="M128 72c-17 21-25 48-25 74 0 23 13 42 25 54 12-12 25-31 25-54 0-26-8-53-25-74z"/><path class="b" d="M124 96h8v118h-8z" opacity=".85"/><path class="l" d="M128 120l-20-16M128 120l20-16M128 152l-22-17M128 152l22-17M128 184l-20-16M128 184l20-16"/>');
+  /* ---- skills ---- */
+  A.strike = em('<path class="b" d="M78 178L182 74l16-8-8 16L86 186z"/><path class="s" d="M182 74l16-8-8 16-104 104-4-4z"/><path class="e" d="M74 168l14 14-8 8q-10 4-16-2t-2-16z"/>' + spark(200, 56, 17));
+  A.guard = em('<path class="b" d="M128 44q36 16 64 16v64q0 52-64 88-64-36-64-88V60q28 0 64-16z"/><path class="h" d="M128 44q36 16 64 16v64q0 52-64 88-64-36-64-88V60q28 0 64-16z"/><circle class="k" cx="128" cy="124" r="17"/><circle class="y" cx="128" cy="124" r="6"/><circle class="y" cx="94" cy="90" r="4"/><circle class="y" cx="162" cy="90" r="4"/><circle class="y" cx="94" cy="152" r="4"/><circle class="y" cx="162" cy="152" r="4"/>');
+  A.scout = em('<path class="b" d="M40 128q40-52 88-52t88 52q-40 52-88 52t-88-52z"/><path class="h" d="M40 128q40-52 88-52t88 52q-40 52-88 52t-88-52z"/><circle class="e" cx="128" cy="128" r="30"/><circle class="k" cx="128" cy="128" r="14"/><circle class="y" cx="136" cy="118" r="5"/><path class="l" d="M62 96l-14-12M194 96l14-12M128 70V52"/>');
+  A.slip = em('<path class="w" d="M56 104q80-30 144-8 16 8 2 18"/><path class="r" d="M52 148q70-24 136-2 14 6 2 14"/><path class="w" d="M72 188q54-18 104-2"/><circle class="y" cx="208" cy="106" r="5"/>');
+  A.bash = em('<path class="e" d="M128 40l14 44 40-22-20 40 46 10-46 12 20 40-40-22-14 44-14-44-40 22 20-40-46-12 46-10-20-40 40 22z"/><circle class="y" cx="128" cy="124" r="18"/><path class="k" d="M120 116l16 16M136 116l-16 16" stroke="#160f0a" stroke-width="5" stroke-linecap="round" fill="none"/>');
+  A.mend = em('<path class="w" d="M128 206q-4-62 8-98"/><path class="b" d="M136 116q34-26 60-20-8 34-44 40-12 2-16-20z"/><path class="h" d="M136 116q34-26 60-20-8 34-44 40-12 2-16-20z"/><path class="b" d="M126 150q-34-22-58-14 10 30 42 34 12 0 16-20z"/><path class="h" d="M126 150q-34-22-58-14 10 30 42 34 12 0 16-20z"/><circle class="y" cx="118" cy="98" r="5"/>');
+  A.pickpocket = em('<path class="b" d="M88 112q40-18 80 0l10 58q2 26-50 26t-50-26z"/><path class="h" d="M88 112q40-18 80 0l10 58q2 26-50 26t-50-26z"/><path class="e" d="M96 104h64q8 0 8 10t-8 10H96q-8 0-8-10t8-10z"/><circle class="y" cx="162" cy="92" r="11"/><path class="l" d="M112 150q16 10 32 0"/>');
+  A.preserve = em('<circle class="b" cx="128" cy="128" r="54"/><circle class="h" cx="128" cy="128" r="54"/><circle class="e" cx="128" cy="128" r="35"/><circle class="b" cx="128" cy="128" r="19"/><circle class="k" cx="128" cy="128" r="9"/>');
+  A.sharpen = em('<rect class="s" x="56" y="150" width="144" height="34" rx="10"/><rect class="h" x="56" y="150" width="144" height="34" rx="10"/><path class="b" d="M76 142L196 80l22-6-10 20L84 158z"/>' + spark(82, 128, 12) + spark(64, 146, 9));
+  A.snipe = em('<path class="w" d="M76 180L180 76"/><path class="e" d="M196 60l-30 8 22 22z"/><path class="b" d="M80 176l-24 4 14-16zM88 184l-4 24 16-14z"/>');
+  A.knifethrow = em('<g transform="rotate(38 128 128)"><path class="b" d="M128 54l11 92-11 18-11-18z"/><path class="e" d="M100 168h56q5 0 5 8t-5 8h-56q-5 0-5-8t5-8z"/><rect class="k" x="121" y="184" width="14" height="26" rx="5"/></g><path class="r" d="M62 178a86 86 0 0 1 22-100"/>');
+  A.grit = em('<path class="r" d="M84 56q24 56 8 140" stroke-width="13"/><path class="r" d="M128 46q26 60 8 154" stroke-width="13"/><path class="r" d="M172 56q24 56 8 140" stroke-width="13"/>');
+  A.chalice = em('<path class="b" d="M76 72h104q0 52-52 58-52-6-52-58z"/><path class="h" d="M76 72h104q0 52-52 58-52-6-52-58z"/><ellipse class="e" cx="128" cy="76" rx="46" ry="10"/><rect class="b" x="122" y="128" width="12" height="52"/><rect class="b" x="96" y="180" width="64" height="14" rx="7"/><circle class="y" cx="110" cy="94" r="5"/>');
+  A.smokebomb = em('<circle class="k" cx="128" cy="142" r="48"/><path class="b" d="M98 114q10-16 30-18-24 12-20 30z"/><path class="w" d="M156 104q10-22 28-26"/>' + spark(192, 66, 14) + '<circle class="b" cx="196" cy="118" r="10" opacity=".8"/><circle class="b" cx="208" cy="140" r="7" opacity=".6"/>');
+  A.necromancy = em('<circle class="b" cx="128" cy="116" r="50"/><circle class="h" cx="128" cy="116" r="50"/><path class="e" d="M100 128q28-34 56 0-14-18-28-18t-28 18z"/><circle class="y" cx="128" cy="118" r="8"/><path class="k" d="M84 166q44 24 88 0l8 20q-52 26-104 0z"/>');
+  A.revenant = em('<path class="w" d="M80 80l96 96M176 80l-96 96" stroke-width="15"/><circle class="b" cx="72" cy="66" r="11"/><circle class="b" cx="64" cy="78" r="11"/><circle class="b" cx="190" cy="178" r="11"/><circle class="b" cx="178" cy="190" r="11"/><circle class="b" cx="184" cy="66" r="11"/><circle class="b" cx="192" cy="78" r="11"/><circle class="b" cx="66" cy="178" r="11"/><circle class="b" cx="78" cy="190" r="11"/>' + spark(128, 128, 12));
+  /* ---- misc ---- */
+  A.hero = em('<path class="b" d="M128 58c-32 0-54 22-54 54 0 16 6 28 14 38-18 8-30 24-30 44v14h140v-14c0-20-12-36-30-44 8-10 14-22 14-38 0-32-22-54-54-54z"/><path class="h" d="M128 58c-32 0-54 22-54 54 0 16 6 28 14 38-18 8-30 24-30 44v14h140v-14c0-20-12-36-30-44 8-10 14-22 14-38 0-32-22-54-54-54z"/><path class="k" d="M128 74c-24 0-40 16-40 40 0 22 18 40 40 40s40-18 40-40c0-24-16-40-40-40z"/><circle class="y" cx="112" cy="118" r="5"/><circle class="y" cx="144" cy="118" r="5"/>');
+  A.flee = em('<path class="w" d="M84 70l46 58-46 58M140 70l46 58-46 58"/><path class="r" d="M52 88l32 40-32 40"/>');
+  A.trophy = em('<path class="w" d="M84 76q-32 2-26 32 4 22 30 22M172 76q32 2 26 32-4 22-30 22"/><path class="b" d="M84 62h88v42q0 40-44 46-44-6-44-46z"/><path class="h" d="M84 62h88v42q0 40-44 46-44-6-44-46z"/><rect class="e" x="84" y="62" width="88" height="14"/><rect class="b" x="120" y="150" width="16" height="22"/><rect class="b" x="96" y="172" width="64" height="16" rx="6"/>' + spark(104, 92, 10));
+  A.shears = em('<path class="b" d="M98 76q-12 62 26 92l10-10q-26-30-20-80z"/><path class="b" d="M158 76q12 62-26 92l-10-10q26-30 20-80z"/><circle class="y" cx="128" cy="152" r="9"/><circle fill="none" stroke="url(#agBone)" stroke-width="11" cx="106" cy="196" r="15"/><circle fill="none" stroke="url(#agBone)" stroke-width="11" cx="150" cy="196" r="15"/>');
+  A.tonic = em('<rect class="k" x="112" y="42" width="32" height="14" rx="6"/><rect class="b" x="116" y="52" width="24" height="32" rx="7"/><circle class="b" cx="128" cy="146" r="56"/><circle class="h" cx="128" cy="146" r="56"/><path class="e" d="M74 160a56 56 0 0 0 108 0q-24 14-54 14t-54-14z"/><circle class="y" cx="112" cy="172" r="5"/><circle class="y" cx="140" cy="184" r="4"/>');
+  A.shopsign = em('<path class="w" d="M44 54h124M56 54v22M160 54v22"/><rect class="b" x="52" y="76" width="152" height="88" rx="11"/><rect class="h" x="52" y="76" width="152" height="88" rx="11"/><circle class="e" cx="128" cy="120" r="25"/><path class="k" d="M128 108l11 20h-22z"/>');
+  return A;
+})();
+
 const MONSTER = {
-  2: ["Rat", "🐀"], 3: ["Cave Bat", "🦇"], 4: ["Slime", "👾"], 5: ["Goblin", "👺"],
-  6: ["Skeleton", "💀"], 7: ["Bandit", "🥷"], 8: ["Dire Wolf", "🐺"], 9: ["Cultist", "🧙"],
-  10: ["Ogre", "👹"], 11: ["Wraith", "👻"], 12: ["Dark Knight", "🤺"], 13: ["Stone Golem", "🗿"],
-  14: ["Dragon", "🐉"],
+  2: ["Rat", "rat"], 3: ["Cave Bat", "bat"], 4: ["Slime", "slime"], 5: ["Goblin", "goblin"],
+  6: ["Skeleton", "skeleton"], 7: ["Bandit", "bandit"], 8: ["Dire Wolf", "wolf"], 9: ["Cultist", "cultist"],
+  10: ["Ogre", "ogre"], 11: ["Wraith", "wraith"], 12: ["Dark Knight", "knight"], 13: ["Stone Golem", "golem"],
+  14: ["Dragon", "dragon"],
 };
 const ELITES = {
   armored: { name: "Armored", text: "your weapon counts as 2 less" },
   brutal:  { name: "Brutal",  text: "deals 2 extra damage" },
 };
 const CURSES = {
-  blight: { name: "Blight",        art: "🕷️", text: "Take 3 damage." },
-  thief:  { name: "Thief's Curse", art: "🐍", text: "Lose 5 gold." },
-  rust:   { name: "Rustwind",      art: "🌫️", text: "Your blade dulls to its own power." },
+  blight: { name: "Blight",        art: ART.spider, text: "Take 3 damage." },
+  thief:  { name: "Thief's Curse", art: ART.snake, text: "Lose 5 gold." },
+  rust:   { name: "Rustwind",      art: ART.rustwind, text: "Your blade dulls to its own power." },
 };
 const WEAPONS = {
-  dagger:  { name: "Rusty Dagger",     power: 4, art: "🔪", text: "A delver's first friend.", price: 0 },
-  rapier:  { name: "Duelist's Rapier", power: 5, art: "🗡️", text: "Doesn't dull when you take no damage.", price: 8 },
-  kris:    { name: "Kris of Thirst",   power: 4, art: "⚔️", text: "Heal 1 whenever it slays.", price: 10 },
-  whisper: { name: "Whisper Blade",    power: 6, art: "🌬️", text: "Ignores dulling against threat 4 or less.", price: 12 },
-  hammer:  { name: "Warhammer",        power: 9, art: "🔨", text: "Dulls two steps at a time.", price: 14 },
+  dagger:  { name: "Rusty Dagger",     power: 4, art: ART.dagger, text: "A delver's first friend.", price: 0 },
+  rapier:  { name: "Duelist's Rapier", power: 5, art: ART.rapier, text: "Doesn't dull when you take no damage.", price: 8 },
+  kris:    { name: "Kris of Thirst",   power: 4, art: ART.kris, text: "Heal 1 whenever it slays.", price: 10 },
+  whisper: { name: "Whisper Blade",    power: 6, art: ART.whisper, text: "Ignores dulling against threat 4 or less.", price: 12 },
+  hammer:  { name: "Warhammer",        power: 9, art: ART.hammer, text: "Dulls two steps at a time.", price: 14 },
 };
 const RELICS = {
-  whetstone:   { name: "Whetstone",       art: "🪨", text: "Your blade never dulls below 4.", price: 10 },
-  emberheart:  { name: "Ember Heart",     art: "❤️‍🔥", text: "Potions also slay the strongest monster they can.", price: 12 },
-  boots:       { name: "Coward's Boots",  art: "👢", text: "You may flee twice in a row.", price: 9 },
-  glasssigil:  { name: "Glass Sigil",     art: "💎", text: "Gold gains doubled. Max health becomes 12.", price: 8 },
-  gravebind:   { name: "Gravebind",       art: "⛓️", text: "Every 5th slain monster returns as a Revenant skill.", price: 11 },
-  torchbearer: { name: "Torchbearer",     art: "🕯️", text: "The top card of the dungeon is always revealed.", price: 9 },
-  phoenix:     { name: "Phoenix Feather", art: "🪶", text: "Once per run, survive death at 1 health.", price: 13 },
+  whetstone:   { name: "Whetstone",       art: ART.whetstone, text: "Your blade never dulls below 4.", price: 10 },
+  emberheart:  { name: "Ember Heart",     art: ART.emberheart, text: "Potions also slay the strongest monster they can.", price: 12 },
+  boots:       { name: "Coward's Boots",  art: ART.boots, text: "You may flee twice in a row.", price: 9 },
+  glasssigil:  { name: "Glass Sigil",     art: ART.glasssigil, text: "Gold gains doubled. Max health becomes 12.", price: 8 },
+  gravebind:   { name: "Gravebind",       art: ART.gravebind, text: "Every 5th slain monster returns as a Revenant skill.", price: 11 },
+  torchbearer: { name: "Torchbearer",     art: ART.torchbearer, text: "The top card of the dungeon is always revealed.", price: 9 },
+  phoenix:     { name: "Phoenix Feather", art: ART.phoenix, text: "Once per run, survive death at 1 health.", price: 13 },
 };
 const SKILLS = {
-  strike:     { name: "Strike",        art: "⚔️", text: "+3 power on your next fight this room." },
-  guard:      { name: "Guard",         art: "🛡️", text: "Block the next 4 damage this room." },
-  scout:      { name: "Scout",         art: "👁️", text: "Peek the top 2 dungeon cards; you may swap them." },
-  slip:       { name: "Slip",          art: "💨", text: "This room you may flee, even after fleeing." },
-  bash:       { name: "Bash",          art: "💥", text: "Slay a monster of threat 6 or less." },
-  mend:       { name: "Mend",          art: "🌿", text: "Heal 3." },
-  pickpocket: { name: "Pickpocket",    art: "💰", text: "Gain 4 gold." },
-  preserve:   { name: "Preserve",      art: "🧿", text: "Your next weapon kill doesn't dull the blade." },
-  sharpen:    { name: "Sharpen",       art: "⚒️", text: "Restore your weapon to a keen edge — undo all dulling." },
-  snipe:      { name: "Snipe",         art: "🏹", text: "Resolve one card; banish the rest of the room to the bottom." },
-  knifethrow: { name: "Knife Throw",   art: "🔪", text: "Fight a monster ignoring dullness; the weapon is lost." },
-  grit:       { name: "Grit",          art: "🐲", text: "+5 defense on your next fight this room." },
-  chalice:    { name: "Second Chalice",art: "✨", text: "You may drink a second potion this room." },
-  smokebomb:  { name: "Smoke Bomb",    art: "💣", text: "Swap two room cards with the top two of the dungeon." },
-  necromancy: { name: "Necromancy",    art: "🔮", text: "Unearth 6 discarded cards; claim one red." },
-  revenant:   { name: "Revenant",      art: "🦴", text: "Slay a monster of threat 8 or less." },
+  strike:     { name: "Strike",        art: ART.strike, text: "+3 power on your next fight this room." },
+  guard:      { name: "Guard",         art: ART.guard, text: "Block the next 4 damage this room." },
+  scout:      { name: "Scout",         art: ART.scout, text: "Peek the top 2 dungeon cards; you may swap them." },
+  slip:       { name: "Slip",          art: ART.slip, text: "This room you may flee, even after fleeing." },
+  bash:       { name: "Bash",          art: ART.bash, text: "Slay a monster of threat 6 or less." },
+  mend:       { name: "Mend",          art: ART.mend, text: "Heal 3." },
+  pickpocket: { name: "Pickpocket",    art: ART.pickpocket, text: "Gain 4 gold." },
+  preserve:   { name: "Preserve",      art: ART.preserve, text: "Your next weapon kill doesn't dull the blade." },
+  sharpen:    { name: "Sharpen",       art: ART.sharpen, text: "Restore your weapon to a keen edge — undo all dulling." },
+  snipe:      { name: "Snipe",         art: ART.snipe, text: "Resolve one card; banish the rest of the room to the bottom." },
+  knifethrow: { name: "Knife Throw",   art: ART.knifethrow, text: "Fight a monster ignoring dullness; the weapon is lost." },
+  grit:       { name: "Grit",          art: ART.grit, text: "+5 defense on your next fight this room." },
+  chalice:    { name: "Second Chalice",art: ART.chalice, text: "You may drink a second potion this room." },
+  smokebomb:  { name: "Smoke Bomb",    art: ART.smokebomb, text: "Swap two room cards with the top two of the dungeon." },
+  necromancy: { name: "Necromancy",    art: ART.necromancy, text: "Unearth 6 discarded cards; claim one red." },
+  revenant:   { name: "Revenant",      art: ART.revenant, text: "Slay a monster of threat 8 or less." },
 };
 const STARTER_DECK = ["strike", "strike", "strike", "strike", "guard", "guard", "guard", "scout", "sharpen", "slip"];
 const DRAFT_POOL = ["bash", "mend", "pickpocket", "preserve", "sharpen", "snipe", "knifethrow", "grit", "chalice", "smokebomb", "necromancy", "strike", "guard"];
@@ -579,11 +690,11 @@ const DEPTHS = [
   { name: "The Throat",        numeral: "III" },
 ];
 const BOSSES = [
-  { name: "The Gaoler",     threat: 12, art: "⛓️", special: "lock",
+  { name: "The Gaoler",     threat: 12, art: ART.gaoler, special: "lock",
     text: "He locks one of your skills away for the fight." },
-  { name: "The Rot King",   threat: 13, art: "🧟", special: "twice",
+  { name: "The Rot King",   threat: 13, art: ART.rotking, special: "twice",
     text: "He must be struck down twice." },
-  { name: "The Deep Tyrant",threat: 15, art: "🐙", special: "pierce",
+  { name: "The Deep Tyrant",threat: 15, art: ART.tyrant, special: "pierce",
     text: "He ignores 3 of your weapon's power." },
 ];
 
@@ -627,10 +738,10 @@ const cardName = (c) =>
   : c.kind === "cache" ? "Loot Cache"
   : CURSES[c.curse].name;
 const cardArt = (c) =>
-  c.kind === "monster" ? MONSTER[c.r][1]
-  : c.kind === "potion" ? (c.r <= 4 ? "🧪" : c.r <= 7 ? "⚗️" : "🏺")
-  : c.kind === "treasure" ? "🪙"
-  : c.kind === "cache" ? "🎁"
+  c.kind === "monster" ? ART[MONSTER[c.r][1]]
+  : c.kind === "potion" ? (c.r <= 4 ? ART.vial : c.r <= 7 ? ART.flask : ART.amphora)
+  : c.kind === "treasure" ? ART.coin
+  : c.kind === "cache" ? ART.cache
   : CURSES[c.curse].art;
 const kindBadge = { monster: "☠", potion: "♥", treasure: "◆", cache: "◆", curse: "✦" };
 const cid = (c) => (c.kind === "curse" ? "curse-" + c.curse : c.kind + "-" + c.s + c.r + (c.elite || ""));
@@ -675,19 +786,88 @@ const SFX = (() => {
       src.start();
     } catch (e) {}
   }
+  /* ---- ambient music: a procedural smouldering-vault loop (no assets) ----
+     A low detuned drone under a filter that breathes, a faint noise wind,
+     and sparse dark bell tones on a random timer. Starts with a run,
+     obeys the mute toggle. */
+  let mus = null, wantMusic = false;
+  function musicStart() {
+    wantMusic = true;
+    if (muted || mus) return;
+    try {
+      const c = ac(), t = c.currentTime;
+      const master = c.createGain();
+      master.gain.setValueAtTime(0.0001, t);
+      master.gain.exponentialRampToValueAtTime(0.05, t + 4);
+      master.connect(c.destination);
+      const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 210; lp.Q.value = 0.7;
+      lp.connect(master);
+      const oscs = [["sawtooth", 55, 0.5], ["sawtooth", 55.6, 0.5], ["triangle", 110.4, 0.35]].map(([ty, f, g]) => {
+        const o = c.createOscillator(), og = c.createGain();
+        o.type = ty; o.frequency.value = f; og.gain.value = g;
+        o.connect(og).connect(lp); o.start(); return o;
+      });
+      const lfo = c.createOscillator(), lfoG = c.createGain();
+      lfo.frequency.value = 0.045; lfoG.gain.value = 75;
+      lfo.connect(lfoG).connect(lp.frequency); lfo.start();
+      const wbuf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+      const wd = wbuf.getChannelData(0);
+      for (let i = 0; i < wd.length; i++) wd[i] = Math.random() * 2 - 1;
+      const wind = c.createBufferSource(); wind.buffer = wbuf; wind.loop = true;
+      const bp = c.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 380; bp.Q.value = 0.5;
+      const wg = c.createGain(); wg.gain.value = 0.22;
+      wind.connect(bp).connect(wg).connect(master); wind.start();
+      const NOTES = [110, 130.8, 146.8, 164.8, 196, 220];
+      let bellTimer = null;
+      const bell = () => {
+        if (!mus) return;
+        const f = NOTES[Math.floor(Math.random() * NOTES.length)];
+        const bt = c.currentTime;
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = "sine"; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, bt);
+        g.gain.exponentialRampToValueAtTime(0.35, bt + 0.04);
+        g.gain.exponentialRampToValueAtTime(0.0001, bt + 3);
+        o.connect(g).connect(master); o.start(bt); o.stop(bt + 3.1);
+        mus.bellTimer = setTimeout(bell, 3500 + Math.random() * 6500);
+      };
+      mus = { master, oscs, lfo, wind, bellTimer };
+      mus.bellTimer = setTimeout(bell, 2200);
+    } catch (e) { mus = null; }
+  }
+  function musicStop(keepWant) {
+    if (!keepWant) wantMusic = false;
+    if (!mus) return;
+    try {
+      const c = ac(), t = c.currentTime;
+      clearTimeout(mus.bellTimer);
+      mus.master.gain.cancelScheduledValues(t);
+      mus.master.gain.setValueAtTime(Math.max(mus.master.gain.value, 0.0001), t);
+      mus.master.gain.exponentialRampToValueAtTime(0.0001, t + 0.8);
+      const dead = mus;
+      setTimeout(() => { try { dead.oscs.forEach((o) => o.stop()); dead.lfo.stop(); dead.wind.stop(); dead.master.disconnect(); } catch (e) {} }, 900);
+    } catch (e) {}
+    mus = null;
+  }
   return {
-    tap: () => tone(220, 0.06, "sine", 0.05),
-    slash: () => { noise(0.12, 0.16, 3200); tone(660, 0.09, "square", 0.04, -300); },
-    thud: () => { noise(0.16, 0.24, 320); tone(90, 0.13, "sine", 0.2, -40); },
-    heal: () => { tone(523, 0.12, "sine", 0.1); setTimeout(() => tone(784, 0.16, "sine", 0.1), 90); },
-    equip: () => { tone(392, 0.07, "triangle", 0.12); setTimeout(() => tone(587, 0.09, "triangle", 0.12), 60); },
-    whoosh: () => noise(0.26, 0.12, 900),
-    coin: () => { tone(988, 0.07, "square", 0.05); setTimeout(() => tone(1319, 0.13, "square", 0.05), 70); },
-    magic: () => { tone(440, 0.1, "sine", 0.08); setTimeout(() => tone(659, 0.1, "sine", 0.08), 80); setTimeout(() => tone(880, 0.18, "sine", 0.08), 160); },
-    curse: () => { tone(310, 0.25, "sawtooth", 0.07, -120); },
-    boss: () => { tone(110, 0.5, "sawtooth", 0.13, -30); noise(0.4, 0.1, 250); },
-    death: () => { tone(170, 0.7, "sawtooth", 0.12, -110); noise(0.5, 0.14, 400); },
-    toggle: () => { muted = !muted; try { localStorage.setItem("underdeck.muted", muted ? "1" : "0"); } catch (e) {} return muted; },
+    tap: () => { noise(0.03, 0.05, 1600); tone(150, 0.05, "sine", 0.05, -30); },
+    slash: () => { noise(0.05, 0.2, 5200); noise(0.14, 0.12, 2400); tone(1150, 0.13, "square", 0.028, -750); tone(240, 0.1, "triangle", 0.07, -70); },
+    thud: () => { tone(58, 0.22, "sine", 0.32, -18); noise(0.14, 0.26, 240); tone(160, 0.08, "triangle", 0.1, -60); },
+    heal: () => { tone(440, 0.16, "sine", 0.09); setTimeout(() => tone(554, 0.18, "sine", 0.08), 110); setTimeout(() => tone(659, 0.28, "sine", 0.07), 220); },
+    equip: () => { noise(0.04, 0.09, 6400); tone(523, 0.06, "triangle", 0.1); setTimeout(() => tone(784, 0.1, "triangle", 0.09), 55); },
+    whoosh: () => { noise(0.3, 0.14, 750); tone(220, 0.24, "sine", 0.04, -140); },
+    coin: () => { tone(831, 0.06, "triangle", 0.09); setTimeout(() => tone(1245, 0.14, "triangle", 0.07), 65); },
+    magic: () => { tone(392, 0.12, "sine", 0.08); setTimeout(() => tone(494, 0.12, "sine", 0.08), 90); setTimeout(() => tone(587, 0.12, "sine", 0.07), 180); setTimeout(() => { tone(740, 0.26, "sine", 0.06); noise(0.2, 0.03, 5200); }, 270); },
+    curse: () => { tone(285, 0.34, "sawtooth", 0.06, -130); tone(292, 0.34, "sawtooth", 0.05, -138); tone(72, 0.3, "sine", 0.14, -14); },
+    boss: () => { tone(98, 0.7, "sawtooth", 0.13, -36); tone(101, 0.7, "sawtooth", 0.1, -40); noise(0.55, 0.12, 210); setTimeout(() => { tone(65, 0.5, "sine", 0.22, -10); noise(0.3, 0.18, 170); }, 330); },
+    death: () => { tone(150, 0.85, "sawtooth", 0.11, -105); tone(155, 0.85, "sawtooth", 0.08, -112); noise(0.7, 0.14, 340); setTimeout(() => tone(50, 0.6, "sine", 0.26, -12), 500); },
+    music: musicStart,
+    toggle: () => {
+      muted = !muted;
+      try { localStorage.setItem("underdeck.muted", muted ? "1" : "0"); } catch (e) {}
+      if (muted) musicStop(true); else if (wantMusic) musicStart();
+      return muted;
+    },
     muted: () => muted,
   };
 })();
@@ -900,7 +1080,7 @@ function endRun(won) {
     if (b.depth === null || S.depth > b.depth) localStorage.setItem("underdeck.bestDepth", String(S.depth));
   } catch (e) {}
   $("#end-eyebrow").textContent = won ? "the deep tyrant falls" : "the dungeon shuffles you under";
-  $("#end-art").textContent = won ? "🏆" : "☠️";
+  $("#end-art").innerHTML = won ? ART.trophy : ART.skeleton;
   const v = $("#end-verdict");
   v.textContent = won ? "ESCAPED" : "SLAIN";
   v.className = "verdict " + (won ? "good" : "bad");
@@ -939,7 +1119,7 @@ function render() {
   $("#deck-count").textContent = S.phase === "boss" ? "☠" : S.deck.length;
   $("#deck-name").textContent = S.phase === "boss" ? "DEPTH BOSS" : "DUNGEON DECK";
   $("#room-label").textContent = S.phase === "boss" ? S.boss.name.toUpperCase() : "ROOM " + S.roomNo;
-  $("#peek-chip").textContent =
+  $("#peek-chip").innerHTML =
     hasRelic("torchbearer") && S.deck.length && S.phase === "room"
       ? "next: " + cardArt(S.deck[0]) + " " + (S.deck[0].kind === "curse" ? cardName(S.deck[0]) : S.deck[0].r)
       : "";
@@ -1005,7 +1185,7 @@ function render() {
     rk.innerHTML = '<span class="frame slot"></span><span class="kitline">no relics</span>';
   }
 
-  $("#gold-line").textContent = "🪙 " + S.gold;
+  $("#gold-line").innerHTML = ART.coin + " " + S.gold;
 
   // hand
   const hand = $("#handrow");
@@ -1018,7 +1198,7 @@ function render() {
     b.disabled = locked || S.phase === "over";
     b.dataset.skill = id;
     b.innerHTML =
-      '<span class="s-art">' + (locked ? "⛓️" : sk.art) + "</span>" +
+      '<span class="s-art">' + (locked ? ART.gravebind : sk.art) + "</span>" +
       '<span class="s-name">' + sk.name + "</span>" +
       (locked ? '<span class="s-cost">locked</span>' : "");
     b.addEventListener("click", () => openSkillSheet(id, i));
@@ -1027,7 +1207,7 @@ function render() {
   const flee = document.createElement("button");
   flee.id = "flee-btn";
   flee.disabled = !canFleeNow() || mode !== null;
-  flee.innerHTML = '<span class="f-art">🏃</span>FLEE';
+  flee.innerHTML = '<span class="f-art">' + ART.flee + "</span>FLEE";
   flee.addEventListener("click", doFlee);
   hand.appendChild(flee);
 
@@ -1047,7 +1227,7 @@ function render() {
 function floatText(text, tone) {
   const el = document.createElement("span");
   el.className = "float " + tone;
-  el.textContent = text;
+  el.innerHTML = text; // only ever fed literals or ART markup, never user input
   $("#room").appendChild(el);
   el.addEventListener("animationend", () => el.remove());
 }
@@ -1232,7 +1412,7 @@ function openCardSheet(c) {
         closeSheet();
         goldGain(c.r);
         removeFromRoom(c); afterResolve();
-        choreograph(null, { label: "+" + (hasRelic("glasssigil") ? c.r * 2 : c.r) + " 🪙", tone: "gold", sound: "coin" });
+        choreograph(null, { label: "+" + (hasRelic("glasssigil") ? c.r * 2 : c.r) + " " + ART.coin, tone: "gold", sound: "coin" });
       },
     }));
     sheetCancel(sheet);
@@ -1256,7 +1436,7 @@ function openCardSheet(c) {
         closeSheet();
         let fx = { label: "cursed", tone: "bone", sound: "curse" };
         if (c.curse === "blight") { const o = loseHp(3); fx = { label: "−3", tone: "blood", pain: 3, sound: "curse" }; if (o === "phoenix") setTimeout(() => floatText("REBORN", "gold"), 380); }
-        if (c.curse === "thief") { S.gold = Math.max(0, S.gold - 5); fx = { label: "−5 🪙", tone: "gold", sound: "curse" }; }
+        if (c.curse === "thief") { S.gold = Math.max(0, S.gold - 5); fx = { label: "−5 " + ART.coin, tone: "gold", sound: "curse" }; }
         if (c.curse === "rust" && S.weapon) { S.weaponLimit = S.weaponLimit === null ? S.weapon.power : Math.min(S.weaponLimit, S.weapon.power); }
         removeFromRoom(c); afterResolve();
         choreograph($('[data-cid="' + cid(c) + '"]'), fx);
@@ -1333,12 +1513,12 @@ function openSkillSheet(id, idx) {
     disabled: !usable,
     goldact: true,
     onPick: () => {
-      if (id === "strike") play(() => { S.strikeNext += 3; floatText("+3 ⚔", "steel"); SFX.equip(); });
-      else if (id === "guard") play(() => { S.block += 4; floatText("+4 🛡", "steel"); SFX.equip(); });
+      if (id === "strike") play(() => { S.strikeNext += 3; floatText("+3 " + ART.strike, "steel"); SFX.equip(); });
+      else if (id === "guard") play(() => { S.block += 4; floatText("+4 " + ART.guard, "steel"); SFX.equip(); });
       else if (id === "grit") play(() => { S.gritNext += 5; floatText("grit", "steel"); SFX.equip(); });
       else if (id === "slip") play(() => { S.slipActive = true; S.fledLast = false; floatText("slip", "bone"); SFX.whoosh(); });
       else if (id === "mend") play(() => { const n = Math.min(S.maxHp - S.hp, 3); S.hp += n; floatText("+" + n, "verd"); SFX.heal(); healPulse(); });
-      else if (id === "pickpocket") play(() => { goldGain(4); floatText("+" + (hasRelic("glasssigil") ? 8 : 4) + " 🪙", "gold"); SFX.coin(); });
+      else if (id === "pickpocket") play(() => { goldGain(4); floatText("+" + (hasRelic("glasssigil") ? 8 : 4) + " " + ART.coin, "gold"); SFX.coin(); });
       else if (id === "preserve") play(() => { S.preserveNext = true; floatText("preserved", "steel"); SFX.equip(); });
       else if (id === "sharpen") play(() => { S.weaponLimit = null; floatText("keen!", "steel"); SFX.equip(); });
       else if (id === "chalice") play(() => { S.secondPotion = true; floatText("chalice", "verd"); SFX.magic(); });
@@ -1413,10 +1593,10 @@ afterResolve = function () {
 
 function showScout() {
   const top = S.deck.slice(0, 2);
-  const sheet = sheetShell('<span class="h-art">👁️</span>Scout <span class="dim">— the next two cards</span>');
+  const sheet = sheetShell('<span class="h-art">' + ART.scout + "</span>Scout <span class=\"dim\">— the next two cards</span>");
   const line = top.map((c) => cardArt(c) + " " + cardName(c) + (c.kind === "curse" ? "" : " (" + c.r + ")")).join("  ·  ");
   const p = document.createElement("p");
-  p.className = "note"; p.textContent = top.length ? line : "The dungeon is spent.";
+  p.className = "note"; p.innerHTML = top.length ? line : "The dungeon is spent.";
   sheet.appendChild(p);
   if (top.length === 2) {
     sheet.appendChild(sheetOption({
@@ -1431,7 +1611,7 @@ function showNecromancy() {
   const pool = S.discard.slice();
   shuffleWith(pool, S.rng);
   const six = pool.slice(0, 6);
-  const sheet = sheetShell('<span class="h-art">🔮</span>Necromancy <span class="dim">— claim one red card</span>');
+  const sheet = sheetShell('<span class="h-art">' + ART.necromancy + "</span>Necromancy <span class=\"dim\">— claim one red card</span>");
   let anyRed = false;
   six.forEach((c) => {
     if (c.kind === "potion") {
@@ -1452,7 +1632,7 @@ function showNecromancy() {
       sheet.appendChild(sheetOption({
         title: "Raise the " + cardName(c) + " (♦)", goldact: true,
         sub: "+" + (hasRelic("glasssigil") ? val * 2 : val) + " gold",
-        onPick: () => { goldGain(val); closeSheet(); SFX.coin(); floatText("+🪙", "gold"); render(); },
+        onPick: () => { goldGain(val); closeSheet(); SFX.coin(); floatText("+" + ART.coin, "gold"); render(); },
       }));
     } else {
       sheet.appendChild(sheetOption({ title: cardName(c), sub: "the dead offer no aid", disabled: true }));
@@ -1471,7 +1651,7 @@ function pickN(pool, n) {
 }
 function showSkillDraft(done) {
   const picks = pickN(DRAFT_POOL, 3);
-  const sheet = sheetShell('<span class="h-art">🎁</span>Loot Cache <span class="dim">— take one</span>');
+  const sheet = sheetShell('<span class="h-art">' + ART.cache + "</span>Loot Cache <span class=\"dim\">— take one</span>");
   picks.forEach((id) => {
     const sk = SKILLS[id];
     sheet.appendChild(sheetOption({
@@ -1490,7 +1670,7 @@ function showSkillDraft(done) {
 function showRelicDraft(done) {
   const unowned = Object.keys(RELICS).filter((id) => !hasRelic(id));
   const picks = pickN(unowned, Math.min(3, unowned.length));
-  const sheet = sheetShell('<span class="h-art">🏆</span>Boss Trophy <span class="dim">— choose a relic</span>');
+  const sheet = sheetShell('<span class="h-art">' + ART.trophy + "</span>Boss Trophy <span class=\"dim\">— choose a relic</span>");
   picks.forEach((id) => {
     const r = RELICS[id];
     sheet.appendChild(sheetOption({
@@ -1508,7 +1688,7 @@ function gainRelic(id) {
 }
 function showRelicList() {
   SFX.tap();
-  const sheet = sheetShell('<span class="h-art">🏺</span>Your Relics');
+  const sheet = sheetShell('<span class="h-art">' + ART.amphora + "</span>Your Relics");
   S.relics.forEach((id) => {
     const r = RELICS[id];
     sheet.appendChild(sheetOption({ title: r.art + " " + r.name, sub: r.text, disabled: true }));
@@ -1521,14 +1701,14 @@ function showShop(done) {
   const stockS = pickN(DRAFT_POOL, 2);
   const removalPrice = () => 8 + S.removals * 4;
   const rebuild = () => {
-    const scroll = sheetShell('<span class="h-art">🏪</span>The Between-Depths Shop <span class="dim">— 🪙 ' + S.gold + "</span>",
+    const scroll = sheetShell('<span class="h-art">' + ART.shopsign + '</span>The Between-Depths Shop <span class="dim">— ' + ART.coin + " " + S.gold + "</span>",
       "Spend before descending. Gold stays; regrets don't.");
 
     const row = (icon, name, sub, price, buy, soldOut) => {
       const b = document.createElement("button");
       b.className = "act" + (soldOut || price > S.gold ? "" : " goldact");
       b.disabled = soldOut || price > S.gold;
-      b.innerHTML = '<span class="shoprow"><span class="s-icon">' + icon + '</span><span class="s-body"><span class="t">' + name + '</span><span class="sub">' + sub + '</span></span><span class="price">' + (soldOut ? "sold" : "🪙 " + price) + "</span></span>";
+      b.innerHTML = '<span class="shoprow"><span class="s-icon">' + icon + '</span><span class="s-body"><span class="t">' + name + '</span><span class="sub">' + sub + '</span></span><span class="price">' + (soldOut ? "sold" : ART.coin + " " + price) + "</span></span>";
       if (!soldOut) b.addEventListener("click", () => { S.gold -= price; buy(); SFX.coin(); rebuild(); });
       scroll.appendChild(b);
     };
@@ -1544,13 +1724,13 @@ function showShop(done) {
       const sk = SKILLS[id];
       row(sk.art, sk.name + " (skill)", sk.text, 5, () => { S.skills.disc.push(id); stockS[i] = null; }, stockS[i] === null);
     });
-    row("🧉", "Tonic", "Heal 6 on the spot.", 6, () => { S.hp = Math.min(S.maxHp, S.hp + 6); });
+    row(ART.tonic, "Tonic", "Heal 6 on the spot.", 6, () => { S.hp = Math.min(S.maxHp, S.hp + 6); });
     // removal charges only when a card is actually chosen inside showRemoval
     const rm = document.createElement("button");
     const rp = removalPrice();
     rm.className = "act" + (rp > S.gold ? "" : " goldact");
     rm.disabled = rp > S.gold;
-    rm.innerHTML = '<span class="shoprow"><span class="s-icon">✂️</span><span class="s-body"><span class="t">Remove a skill card</span><span class="sub">Thin your deck — the fee rises each time.</span></span><span class="price">🪙 ' + rp + "</span></span>";
+    rm.innerHTML = '<span class="shoprow"><span class="s-icon">' + ART.shears + '</span><span class="s-body"><span class="t">Remove a skill card</span><span class="sub">Thin your deck — the fee rises each time.</span></span><span class="price">' + ART.coin + " " + rp + "</span></span>";
     rm.addEventListener("click", () => showRemoval(rp, () => rebuild()));
     scroll.appendChild(rm);
 
@@ -1559,7 +1739,7 @@ function showShop(done) {
     summary.className = "descend-summary";
     summary.innerHTML = "Carrying: " + (S.weapon ? S.weapon.art + " " + S.weapon.name : "no weapon") +
       " · " + (S.relics.length ? S.relics.map((id) => RELICS[id].art).join(" ") : "no relics") +
-      " · 🪙 " + S.gold;
+      " · " + ART.coin + " " + S.gold;
     footer.appendChild(summary);
 
     const leave = document.createElement("button");
@@ -1575,7 +1755,7 @@ function showShop(done) {
   rebuild();
 }
 function showRemoval(price, back) {
-  const sheet = sheetShell('<span class="h-art">✂️</span>Remove a card <span class="dim">— it leaves the run</span>');
+  const sheet = sheetShell('<span class="h-art">' + ART.shears + "</span>Remove a card <span class=\"dim\">— it leaves the run</span>");
   const zones = [["draw", S.skills.draw], ["disc", S.skills.disc], ["hand", S.skills.hand]];
   const counts = {};
   zones.forEach(([z, arr]) => arr.forEach((id) => { counts[id] = (counts[id] || 0) + 1; }));
@@ -1614,7 +1794,7 @@ function doFlee() {
 /* ---------- interstitial / overlays ---------- */
 function showInterstitial(o) {
   $("#int-eyebrow").textContent = o.eyebrow;
-  $("#int-art").textContent = o.art;
+  $("#int-art").innerHTML = o.art;
   $("#int-title").textContent = o.title;
   $("#int-title").className = "verdict " + (o.bad ? "bad" : "good");
   $("#int-text").textContent = o.text;
@@ -1630,6 +1810,7 @@ function showInterstitial(o) {
 let lastSeed = null;
 function startGame(seed) {
   lastSeed = String(seed);
+  SFX.music(); // ambient vault loop; user gesture has already unlocked audio
   newRun(lastSeed);
   $("#start").classList.remove("open");
   $("#end").classList.remove("open");
@@ -1647,6 +1828,8 @@ $("#btn-daily2").addEventListener("click", () => { SFX.tap(); startGame(dailySee
 $("#btn-daily").textContent = "Daily Descent · " + new Date().toLocaleDateString(undefined, { day: "numeric", month: "short" });
 $("#mute").textContent = SFX.muted() ? "🔇" : "🔊";
 $("#mute").addEventListener("click", () => { $("#mute").textContent = SFX.toggle() ? "🔇" : "🔊"; });
+// stamp the engraved emblems into any static markup slots
+document.querySelectorAll("[data-art]").forEach((el) => { el.innerHTML = ART[el.dataset.art] || ""; });
 /* ================================================================
    TUTORIAL — a paged rule guide with real card visuals
    ================================================================ */
@@ -1683,7 +1866,7 @@ function tutArrow() { const s = document.createElement("span"); s.className = "a
 function tutFleeTile() {
   const d = document.createElement("div");
   d.style.cssText = "width:74px;height:88px;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:linear-gradient(180deg,var(--blood),var(--blood-deep));color:#fff;font-weight:700;letter-spacing:.18em;font-size:11px";
-  d.innerHTML = '<span style="font-size:22px">🏃</span>FLEE';
+  d.innerHTML = '<span style="font-size:22px">' + ART.flee + "</span>FLEE";
   return d;
 }
 
@@ -1709,7 +1892,7 @@ const TUT = [
     stage: () => {
       const wep = document.createElement("div");
       wep.className = "tut-mini-skill";
-      wep.innerHTML = '<span class="s-art">🔪</span><span class="s-name">Dagger</span><span class="s-cost">power 3</span>';
+      wep.innerHTML = '<span class="s-art">' + ART.dagger + '</span><span class="s-name">Dagger</span><span class="s-cost">power 3</span>';
       return [wep, tutArrow(), tutHex({ kind: "monster", s: "♠", r: 8 }, { tag: "take 5" })];
     },
   },
@@ -1746,7 +1929,7 @@ const TUT = [
     body: "<b class='g'>Relics</b> rewrite the rules — collect them from bosses and shops. Clear each of the <b>three Depths</b> to face its boss; curses and elites lurk in the deep. Beat all three to escape. Good luck, Delver.",
     stage: () => {
       const trophy = document.createElement("span");
-      trophy.className = "bigart"; trophy.textContent = "🏆";
+      trophy.className = "bigart"; trophy.innerHTML = ART.trophy;
       return [trophy, tutRelic("whetstone")];
     },
     last: true,
