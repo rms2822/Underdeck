@@ -1310,9 +1310,14 @@ function sheetCancel(sheet, label) {
   $("#backdrop").classList.add("open");
   $("#sheet").classList.add("open");
 }
-function closeSheet() { $("#sheet").classList.remove("open"); $("#backdrop").classList.remove("open"); }
-$("#backdrop").addEventListener("click", closeSheet);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+// While a must-resolve sheet is up (relic draft, shop, loot draft, removal),
+// backdrop taps and Escape must not dismiss it — closing those sheets loses
+// the reward or soft-locks the run with no way to descend after a boss.
+let sheetPinned = false;
+function closeSheet() { sheetPinned = false; $("#sheet").classList.remove("open"); $("#backdrop").classList.remove("open"); }
+function dismissSheet() { if (!sheetPinned) closeSheet(); }
+$("#backdrop").addEventListener("click", dismissSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") dismissSheet(); });
 function deathNote(dmg) { return dmg >= S.hp && !(hasRelic("phoenix") && !S.phoenixUsed) ? " — you will die" : ""; }
 
 function fightOptionRows(c, sheet, resolveAfter) {
@@ -1664,6 +1669,7 @@ function showSkillDraft(done) {
     title: "Take the coin instead", sub: "+" + (hasRelic("glasssigil") ? 10 : 5) + " gold",
     onPick: () => { goldGain(5); closeSheet(); SFX.coin(); done(); },
   }));
+  sheetPinned = true; // a dismissed draft would silently eat the reward
   $("#backdrop").classList.add("open");
   $("#sheet").classList.add("open");
 }
@@ -1679,6 +1685,7 @@ function showRelicDraft(done) {
     }));
   });
   if (!picks.length) { closeSheet(); return done(); }
+  sheetPinned = true; // the trophy must be chosen — dismissing would skip the shop and descend
   $("#backdrop").classList.add("open");
   $("#sheet").classList.add("open");
 }
@@ -1734,6 +1741,7 @@ function showShop(done) {
     rm.addEventListener("click", () => showRemoval(rp, () => rebuild()));
     scroll.appendChild(rm);
 
+    sheetPinned = true; // shop must resolve via Descend, never a stray tap
     const footer = sheetFooter();
     const summary = document.createElement("p");
     summary.className = "descend-summary";
@@ -1771,11 +1779,20 @@ function showRemoval(price, back) {
         S.gold -= price;
         S.removals++;
         SFX.coin();
-        closeSheet(); back();
+        back();
       },
     }));
   });
-  sheetCancel(sheet, "Never mind");
+  // cancel returns to the shop — a plain closeSheet here stranded the run
+  // with no Descend option (the shop never re-opened)
+  const nv = document.createElement("button");
+  nv.className = "act cancel";
+  nv.innerHTML = '<span class="t">Never mind — back to the shop</span>';
+  nv.addEventListener("click", back);
+  sheetFooter().appendChild(nv);
+  sheetPinned = true;
+  $("#backdrop").classList.add("open");
+  $("#sheet").classList.add("open");
 }
 
 /* ---------- flee ---------- */
