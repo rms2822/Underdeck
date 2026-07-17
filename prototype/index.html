@@ -2751,6 +2751,7 @@ function showShop(done) {
   const stockW = pickN(Object.keys(WEAPONS).filter((id) => id !== "dagger" && (!S.weapon || id !== S.weapon.id)), 2);
   const stockR = pickN(Object.keys(RELICS).filter((id) => !hasRelic(id)), 2);
   const stockS = pickN(DRAFT_POOL, 2);
+  const sold = { w: new Set(), r: new Set(), s: new Set() };
   const removalPrice = () => 8 + S.removals * 4;
   const rebuild = () => {
     const scroll = sheetShell('<span class="h-art">' + ART.shopsign + '</span>The Between-Depths Shop <span class="dim">— ' + ART.coin + " " + S.gold + "</span>",
@@ -2764,17 +2765,20 @@ function showShop(done) {
       if (!soldOut) b.addEventListener("click", () => { S.gold -= price; buy(); SFX.coin(); rebuild(); });
       scroll.appendChild(b);
     };
+    // sold slots are flagged, never nulled — nulling the id made the next
+    // rebuild dereference WEAPONS[null] and crash mid-build, leaving the
+    // sheet without its Descend footer (the "stuck after buying" bug)
     stockW.forEach((id, i) => {
       const w = WEAPONS[id];
-      row(w.art, w.name + " (" + w.power + ")", w.text, w.price, () => { S.weapon = Object.assign({ id }, w); S.weaponLimit = null; stockW[i] = null; }, stockW[i] === null);
+      row(w.art, w.name + " (" + w.power + ")", w.text, w.price, () => { S.weapon = Object.assign({ id }, w); S.weaponLimit = null; sold.w.add(i); }, sold.w.has(i));
     });
     stockR.forEach((id, i) => {
       const r = RELICS[id];
-      row(r.art, r.name, r.text, r.price, () => { gainRelic(id); stockR[i] = null; }, stockR[i] === null);
+      row(r.art, r.name, r.text, r.price, () => { gainRelic(id); sold.r.add(i); }, sold.r.has(i));
     });
     stockS.forEach((id, i) => {
       const sk = SKILLS[id];
-      row(sk.art, sk.name + " (skill)", sk.text, 5, () => { S.skills.disc.push(id); stockS[i] = null; }, stockS[i] === null);
+      row(sk.art, sk.name + " (skill)", sk.text, 5, () => { S.skills.disc.push(id); sold.s.add(i); }, sold.s.has(i));
     });
     row(ART.tonic, "Tonic", "Heal 6 on the spot.", 6, () => { S.hp = Math.min(S.maxHp, S.hp + 6); });
     // removal charges only when a card is actually chosen inside showRemoval
