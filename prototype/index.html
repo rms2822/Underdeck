@@ -2180,7 +2180,7 @@ function render() {
       '<span class="frame hexclip"><span class="fill hexclip"><span class="art" aria-hidden="true">' + S.boss.art + "</span></span></span>" +
       '<span class="badge val">' + S.boss.threat + "</span>" +
       '<span class="badge kind">☠</span>' +
-      '<span class="hexname">' + S.boss.name + (S.boss.hitsLeft > 1 ? " · " + S.boss.hitsLeft + " lives" : "") + "</span>";
+      '<span class="hexname">' + S.boss.name + (S.boss.hitsLeft > 1 ? " · " + S.boss.hitsLeft + " lives" : S.boss.special === "twice" ? " · last life" : "") + "</span>";
     b.addEventListener("click", () => openBossSheet());
     room.appendChild(b);
   } else {
@@ -2500,7 +2500,7 @@ function openBossSheet() {
   SFX.tap();
   const b = S.boss;
   const c = { kind: "monster", s: "♠", r: b.threat };
-  const sheet = sheetShell('<span class="h-art">' + b.art + "</span>" + b.name + ' <span class="dim">— threat ' + b.threat + (b.hitsLeft > 1 ? " · two lives" : "") + "</span>", b.text);
+  const sheet = sheetShell('<span class="h-art">' + b.art + "</span>" + b.name + ' <span class="dim">— threat ' + b.threat + (b.hitsLeft > 1 ? " · two lives" : b.special === "twice" ? " · last life" : "") + "</span>", b.text);
   const mkPick = (useWeapon) => () => {
     closeSheet();
     const r = fightBoss(useWeapon);
@@ -2509,10 +2509,12 @@ function openBossSheet() {
       ? { label: "−" + r.dmg, tone: "blood", hit: true, pain: r.dmg, sound: useWeapon ? "slash" : "thud" }
       : { label: "blocked", tone: "steel", hit: true, sound: useWeapon ? "slash" : "thud" });
     if (r.outcome === "phoenix") setTimeout(() => { floatText("REBORN", "gold"); SFX.magic(); }, 380);
+    if (r.outcome === "again") setTimeout(() => { floatText("HE RISES", "blood"); SFX.boss(); }, 650);
     if (r.outcome === "slain") setTimeout(() => bossDefeated(), 700);
     if (r.outcome === "dead") setTimeout(() => endRun(false), 500);
   };
-  const buffs = (S.strikeNext ? " · +strike " + S.strikeNext : "") + (S.gritNext ? " · grit" : "") + (S.block ? " · block " + S.block : "");
+  const stagger = b.special === "twice" && b.hitsLeft > 1 ? " · the first blow only staggers him" : "";
+  const buffs = (S.strikeNext ? " · +strike " + S.strikeNext : "") + (S.gritNext ? " · grit" : "") + (S.block ? " · block " + S.block : "") + stagger;
   if (S.weapon && canUseWeapon(c)) {
     const pv = previewFight(c, true);
     sheet.appendChild(sheetOption({
