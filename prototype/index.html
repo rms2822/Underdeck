@@ -1738,7 +1738,7 @@ const BOSSES = [
   { name: "The Gaoler",     threat: 12, art: ART.gaoler, special: "lock",
     text: "He locks one of your skills away for the fight." },
   { name: "The Rot King",   threat: 13, art: ART.rotking, special: "twice",
-    text: "He must be struck down twice." },
+    text: "He must be struck down twice — he rises from the first blow wounded, at threat 8." },
   { name: "The Deep Tyrant",threat: 15, art: ART.tyrant, special: "pierce",
     text: "He ignores 3 of your weapon's power." },
 ];
@@ -2074,8 +2074,12 @@ function startBoss() {
     },
   });
 }
+// the twice-boss rises wounded: his second life fights at reduced threat
+function bossThreatNow() {
+  return S.boss.special === "twice" && S.boss.hitsLeft === 1 ? 8 : S.boss.threat;
+}
 function fightBoss(useWeapon) {
-  const c = { kind: "monster", s: "♠", r: S.boss.threat };
+  const c = { kind: "monster", s: "♠", r: bossThreatNow() };
   const pv = previewFight(c, useWeapon);
   S.block -= pv.blocked;
   S.strikeNext = 0; S.gritNext = 0;
@@ -2178,7 +2182,7 @@ function render() {
     b.dataset.cid = "boss";
     b.innerHTML =
       '<span class="frame hexclip"><span class="fill hexclip"><span class="art" aria-hidden="true">' + S.boss.art + "</span></span></span>" +
-      '<span class="badge val">' + S.boss.threat + "</span>" +
+      '<span class="badge val">' + bossThreatNow() + "</span>" +
       '<span class="badge kind">☠</span>' +
       '<span class="hexname">' + S.boss.name + (S.boss.hitsLeft > 1 ? " · " + S.boss.hitsLeft + " lives" : S.boss.special === "twice" ? " · last life" : "") + "</span>";
     b.addEventListener("click", () => openBossSheet());
@@ -2499,8 +2503,8 @@ function openCardSheet(c) {
 function openBossSheet() {
   SFX.tap();
   const b = S.boss;
-  const c = { kind: "monster", s: "♠", r: b.threat };
-  const sheet = sheetShell('<span class="h-art">' + b.art + "</span>" + b.name + ' <span class="dim">— threat ' + b.threat + (b.hitsLeft > 1 ? " · two lives" : b.special === "twice" ? " · last life" : "") + "</span>", b.text);
+  const c = { kind: "monster", s: "♠", r: bossThreatNow() };
+  const sheet = sheetShell('<span class="h-art">' + b.art + "</span>" + b.name + ' <span class="dim">— threat ' + c.r + (b.hitsLeft > 1 ? " · two lives" : b.special === "twice" ? " · last life, wounded" : "") + "</span>", b.text);
   const mkPick = (useWeapon) => () => {
     closeSheet();
     const r = fightBoss(useWeapon);
@@ -2513,7 +2517,7 @@ function openBossSheet() {
     if (r.outcome === "slain") setTimeout(() => bossDefeated(), 700);
     if (r.outcome === "dead") setTimeout(() => endRun(false), 500);
   };
-  const stagger = b.special === "twice" && b.hitsLeft > 1 ? " · the first blow only staggers him" : "";
+  const stagger = b.special === "twice" && b.hitsLeft > 1 ? " · the first blow staggers him — he rises at threat 8" : "";
   const buffs = (S.strikeNext ? " · +strike " + S.strikeNext : "") + (S.gritNext ? " · grit" : "") + (S.block ? " · block " + S.block : "") + stagger;
   if (S.weapon && canUseWeapon(c)) {
     const pv = previewFight(c, true);
